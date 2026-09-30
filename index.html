@@ -191,6 +191,16 @@ form.add input,form.add select{background:var(--bg);border:1px solid var(--line)
 .person form .row{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .copy{background:none;border:1px solid var(--line);border-radius:5px;font-size:12px;padding:1px 7px;cursor:pointer;color:var(--muted);margin-left:4px}
 /* v3 additions */
+.recfilters{display:flex;flex-direction:column;gap:10px}
+.recs{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media (max-width:640px){.recs{grid-template-columns:1fr}}
+.rec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.rec h3{font-size:18px}
+.rec p{margin:0;font-size:14.5px;overflow-wrap:anywhere}
+.rec-top{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.rec-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline;font-size:13.5px;margin-top:auto;padding-top:6px}
+.rec-foot a{font-weight:600;text-decoration:none}
+.recs .empty{grid-column:1/-1}
 .views{display:flex;gap:4px;background:var(--sunk);border-radius:10px;padding:4px;flex-wrap:wrap}
 .views button{flex:1 1 auto;border:0;background:none;border-radius:7px;padding:8px 12px;font-weight:600;color:var(--muted);cursor:pointer}
 .views button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
@@ -266,6 +276,7 @@ details.group .gleg{margin-top:18px}
     <button role="tab" data-tab="travel" aria-selected="false">Flights &amp; stays</button>
     <button role="tab" data-tab="money" aria-selected="false">Money</button>
     <button role="tab" data-tab="photos" aria-selected="false">Photos</button>
+    <button role="tab" data-tab="recs" aria-selected="false">Recs</button>
     <button role="tab" data-tab="info" aria-selected="false">Info &amp; contacts</button>
   </nav>
 
@@ -298,7 +309,7 @@ details.group .gleg{margin-top:18px}
           <div class="quick"><button type="button" data-q="all">Everyone</button><button type="button" data-q="madrid">Madrid group</button><button type="button" data-q="sansebastian">San Sebastián group</button><button type="button" data-q="barcelona">Barcelona group</button><button type="button" data-q="none">Clear</button></div></div>
         <div class="f span6" style="flex-direction:row;align-items:center;gap:12px;flex-wrap:wrap"><button class="btn" id="c-add" type="submit">Add cost</button><span class="formmsg" id="addmsg"></span></div>
       </form>
-      <p class="muted" style="font-size:13px;margin:12px 0 0">Still to add once paid: Vueling bag fees ($12–192 per bag), International Driving Permits for Oliver and Lake, Segovia bus (about €15 each).</p>
+      <p class="muted" style="font-size:13px;margin:12px 0 0">Still to add once paid: Vueling bag fees ($12–192 per bag), International Driving Permits for Oliver and Lake, Segovia bus for Meredith (about €15).</p>
     </div>
 
     <div class="views" id="views" role="tablist">
@@ -318,6 +329,27 @@ details.group .gleg{margin-top:18px}
   </section>
 
   <section class="panel" id="p-photos" hidden></section>
+
+  <section class="panel" id="p-recs" hidden>
+    <div>
+      <h2 class="sec">Recs from the group</h2>
+      <p class="muted" style="margin:4px 0 12px;font-size:14px">Food spots, sights, bars, things to do. Add anything you think the group should know about.</p>
+      <div class="recfilters"><div class="views" id="rec-city"></div><div class="picks" id="rec-cat"></div></div>
+    </div>
+    <div class="actions" id="recactions"><button class="btn" type="button" id="rec-open" aria-expanded="false">+ Add a rec</button></div>
+    <div class="card" id="rec-panel" hidden>
+      <h3 style="font-size:18px;margin-bottom:12px">Add a rec</h3>
+      <form class="add" id="recform" novalidate>
+        <div class="f span3 wide"><label class="label" for="r-title">Place or thing</label><input id="r-title" placeholder="e.g. Bar Néstor" maxlength="80" spellcheck="true" autocomplete="off"><div class="preview" id="r-preview"></div></div>
+        <div class="f span3 wide"><label class="label" for="r-city">City</label><select id="r-city"><option value="madrid">Madrid</option><option value="sansebastian">San Sebastián</option><option value="barcelona">Barcelona</option><option value="general">Anywhere / day trip</option></select></div>
+        <div class="f span6"><span class="label">Type</span><div class="picks" id="r-cat"></div></div>
+        <div class="f span6"><label class="label" for="r-note">Why go (optional)</label><input id="r-note" placeholder="e.g. Famous tortilla, only made twice a day. Go early." maxlength="240" spellcheck="true" autocomplete="off"></div>
+        <div class="f span6"><label class="label" for="r-link">Link (optional)</label><input id="r-link" type="url" inputmode="url" placeholder="https://… (website, Instagram, or Google Maps)" maxlength="300" autocomplete="off"></div>
+        <div class="f span6" style="flex-direction:row;align-items:center;gap:12px;flex-wrap:wrap"><button class="btn" id="r-add" type="submit">Add rec</button><span class="formmsg" id="recmsg"></span></div>
+      </form>
+    </div>
+    <div class="recs" id="recs"></div>
+  </section>
 
   <section class="panel" id="p-info" hidden>
     <div>
@@ -358,7 +390,7 @@ const PLACES = {
 };
 /* Events: `who` limits an event to those people; without it, it applies to everyone on that leg.
    `farewell` events show only in the full group schedule. */
-const GUYS = ["Oliver","Joe","Lake","Danny","Chib"], GIRLS = ["Meredith","Mia","Lam"];
+const GUYS = ["Oliver","Joe","Lake","Danny","Chib"], SEGOVIA = ["Meredith"];
 const AA_GROUP = ["Mia","Chib","Lake","Lam","Joe","Danny"], SS_GROUP = ["Oliver","Meredith","Lake","Lam","Joe","Danny"];
 const BCN_FLY = ["Oliver","Meredith","Lake","Joe","Lam"], BCN_APT = ["Oliver","Lake","Lam","Joe"];
 /* `go:true` marks travel-time buffers (Uber, taxi, airport time). Durations are rough estimates. */
@@ -379,12 +411,13 @@ const SCHEDULE = {
     ]},
     {d:"Sat",n:"3",ev:[
       {t:"Day",what:"Time with Luke",detail:"The guys spend the day with the groom. Plans to come.",tag:"Details to come",who:GUYS},
-      {t:"Morning",what:"Sleep in",detail:"No rush after the wedding.",who:GIRLS},
-      {t:"~12:15 pm",go:true,what:"Uber to the bus station",detail:"Allow about 45 minutes before the bus. Station to confirm.",tag:"To confirm",who:GIRLS},
-      {t:"By 1:00 pm",what:"Bus to Segovia",detail:"1:00 pm is the latest departure to make lunch. Exact time to pick. Round trip is about €15.",who:GIRLS},
-      {t:"Midday",what:"Lunch in Segovia",detail:"A typical restaurant or a supermarket picnic, to be decided.",who:GIRLS},
-      {t:"Afternoon",what:"Walking tour and medieval market",detail:"Segovia is small and walkable. There's a medieval market that weekend.",who:GIRLS},
-      {t:"~7:00 pm",what:"Bus back to Madrid",detail:"Back around 8:00 pm, 10:00 pm at the latest.",who:GIRLS},
+      {t:"Day",what:"Madrid, open day",detail:"Plans to come.",tag:"To come",who:["Mia","Lam"]},
+      {t:"Morning",what:"Sleep in",detail:"No rush after the wedding.",who:SEGOVIA},
+      {t:"~12:15 pm",go:true,what:"Uber to the bus station",detail:"Allow about 45 minutes before the bus. Station to confirm.",tag:"To confirm",who:SEGOVIA},
+      {t:"By 1:00 pm",what:"Bus to Segovia",detail:"1:00 pm is the latest departure to make lunch. Exact time to pick. Round trip is about €15.",who:SEGOVIA},
+      {t:"Midday",what:"Lunch in Segovia",detail:"A typical restaurant or a supermarket picnic, to be decided.",who:SEGOVIA},
+      {t:"Afternoon",what:"Walking tour and medieval market",detail:"Segovia is small and walkable. There's a medieval market that weekend.",who:SEGOVIA},
+      {t:"~7:00 pm",what:"Bus back to Madrid",detail:"Back around 8:00 pm, 10:00 pm at the latest.",who:SEGOVIA},
     ]},
     {d:"Sun",n:"4",ev:[{t:"11:00 am",what:"Check out of the Madrid rental",detail:"Latest check-out. The San Sebastián group leaves earlier for the van.",map:"madapt"}]},
   ],
@@ -498,7 +531,7 @@ const canActAs = p => !!DBREF && !!AUTH && (IS_OWNER || AUTH.person===p);
 const canWrite = () => !!DBREF && !!AUTH;
 const contactOf = p => PDATA[p]?.contact || {};
 const travelOf = (p,k) => FIXED_FLIGHTS[p]?.[k] || PDATA[p]?.travel?.[k] || null;
-function applyState(st){ PDATA={}; (st.people||[]).forEach(r=>PDATA[r.person]=r); LEDGER={s:{expenses:st.expenses||[],payments:st.payments||[]}}; DBREF=true; LOADED=true; LOAD_ERR=false; }
+function applyState(st){ PDATA={}; (st.people||[]).forEach(r=>PDATA[r.person]=r); LEDGER={s:{expenses:st.expenses||[],payments:st.payments||[]}}; TIPS=st.tips||[]; DBREF=true; LOADED=true; LOAD_ERR=false; }
 async function api(action, data={}, withAuth=true){
   const body = {action, ...data}; if(withAuth && AUTH){ body.person=AUTH.person; body.pin=AUTH.pin; }
   let j;
@@ -564,7 +597,7 @@ function renderStrip(){
 }
 $("#strip").addEventListener("click",e=>{const b=e.target.closest("[data-leg]");if(!b)return;LEG=b.dataset.leg;renderStrip();renderSchedule();showTab("schedule");});
 document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
-const TABS = ["schedule","travel","money","photos","info"];
+const TABS = ["schedule","travel","money","photos","recs","info"];
 function showTab(t){ document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t)); TABS.forEach(x=>$("#p-"+x).hidden = x!==t); }
 (function(){
   const now = new Date(), wed = new Date("2026-10-02T17:00:00+02:00"), end = new Date("2026-10-10T23:59:00+02:00");
@@ -787,6 +820,52 @@ $("#p-money").addEventListener("click",async e=>{
 });
 
 /* ================= Photos ================= */
+/* ================= Recs ================= */
+let TIPS=[], REC_CITY="all", REC_CAT="all";
+const REC_CATS = [["food","Food & drink"],["sights","Sights"],["activities","Activities"],["nightlife","Nightlife"],["other","Other"]];
+const catName = k => (REC_CATS.find(c=>c[0]===k)||REC_CATS[4])[1];
+const cityName = k => k==="general" ? "Anywhere" : LEGS[k]?.city || k;
+const safeLink = u => /^https?:\/\/[^\s"'<>]+$/i.test(u||"") ? u : "";
+function renderRecs(){
+  const cities=[["all","All"],["madrid","Madrid"],["sansebastian","San Sebastián"],["barcelona","Barcelona"],["general","Anywhere"]];
+  $("#rec-city").innerHTML = cities.map(([k,l])=>{ const n=k==="all"?TIPS.length:TIPS.filter(t=>t.city===k).length;
+    return `<button type="button" data-rcity="${k}" aria-selected="${k===REC_CITY}">${l}${n?` <span class="vc">${n}</span>`:""}</button>`; }).join("");
+  $("#rec-cat").innerHTML = [["all","All types"],...REC_CATS].map(([k,l])=>`<button type="button" class="pick" data-rcat="${k}" aria-pressed="${k===REC_CAT}">${l}</button>`).join("");
+  $("#recactions").hidden = !canWrite(); if(!canWrite()) $("#rec-panel").hidden=true;
+  const list = TIPS.filter(t=>(REC_CITY==="all"||t.city===REC_CITY)&&(REC_CAT==="all"||t.category===REC_CAT)).sort((a,b)=>(b.at||0)-(a.at||0));
+  const canDelTip = t => IS_OWNER || (!!AUTH && t.by===AUTH.person);
+  $("#recs").innerHTML = list.length ? list.map(t=>{ const link=safeLink(t.link);
+    return `<article class="rec"><div class="rec-top"><span class="pill ${esc(t.city)}">${esc(cityName(t.city))}</span><span class="method">${esc(catName(t.category))}</span></div>
+      <h3>${esc(t.title)}</h3>${t.note?`<p>${esc(t.note)}</p>`:""}
+      <div class="rec-foot"><span class="muted">From ${esc(t.by||"someone")}</span><span style="display:flex;gap:12px;flex-wrap:wrap">${link?`<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">Link ↗</a>`:""}<a href="${maps(t.title+", "+(t.city==="general"?"Spain":cityName(t.city)+", Spain"))}" target="_blank" rel="noopener">Map ↗</a>${canDelTip(t)?`<button class="x" data-deltip="${esc(t.id)}">Remove</button>`:""}</span></div></article>`; }).join("")
+    : `<div class="empty">${TIPS.length?"Nothing here yet for this filter.":"No recs yet. Unlock your name at the top and add the first one."}</div>`;
+}
+(function(){
+  $("#r-cat").innerHTML = REC_CATS.map(([k,l],i)=>`<button type="button" class="pick" data-p="${k}" aria-pressed="${i===0}">${l}</button>`).join("");
+  $("#r-cat").addEventListener("click",e=>{const b=e.target.closest(".pick");if(!b)return;$("#r-cat").querySelectorAll(".pick").forEach(x=>x.setAttribute("aria-pressed",x===b));});
+  $("#r-title").addEventListener("input",()=>{const raw=$("#r-title").value,t=tidy(raw);$("#r-preview").innerHTML=raw.trim()&&t!==raw.trim()?`Will save as <b>${esc(t)}</b>`:"";});
+  $("#rec-open").addEventListener("click",()=>{ const p=$("#rec-panel"); p.hidden=!p.hidden; $("#rec-open").setAttribute("aria-expanded",!p.hidden); if(!p.hidden) setTimeout(()=>$("#r-title").focus(),50); });
+  $("#p-recs").addEventListener("click",async e=>{
+    const c=e.target.closest("[data-rcity]"); if(c){ REC_CITY=c.dataset.rcity; renderRecs(); return; }
+    const k=e.target.closest("[data-rcat]"); if(k){ REC_CAT=k.dataset.rcat; renderRecs(); return; }
+    const d=e.target.closest("[data-deltip]"); if(!d) return;
+    if(d.dataset.confirm!=="1"){ d.dataset.confirm="1"; d.textContent="Confirm remove"; setTimeout(()=>{ if(d.isConnected){d.dataset.confirm="";d.textContent="Remove";} },4000); return; }
+    try{ await api("delete",{kind:"tips",id:d.dataset.deltip}); renderRecs(); }catch(err){ d.textContent=err.message; }
+  });
+  $("#recform").addEventListener("submit",async e=>{
+    e.preventDefault(); const msg=$("#recmsg");
+    const title=tidy($("#r-title").value), link=$("#r-link").value.trim(), note=$("#r-note").value.trim();
+    const category=document.querySelector('#r-cat .pick[aria-pressed="true"]')?.dataset.p||"other", city=$("#r-city").value;
+    const err=!canWrite()?"Unlock your name with your PIN first (top of the page).":!title?"Name the place or thing.":link&&!safeLink(link)?"Links need to start with https://":"";
+    if(err){ msg.className="formmsg err"; msg.textContent=err; return; }
+    const btn=$("#r-add"); btn.disabled=true;
+    try{ await api("add",{kind:"tips",obj:{title,city,category,note,link}}); REC_CITY=city; REC_CAT="all"; renderRecs();
+      msg.className="formmsg ok"; msg.textContent=`Added ${title}.`; ["#r-title","#r-note","#r-link"].forEach(s=>$(s).value=""); $("#r-preview").textContent=""; }
+    catch(err2){ msg.className="formmsg err"; msg.textContent = /Unknown list/.test(err2.message) ? "Recs aren't switched on yet. Ask Oliver to update the Sheet script." : err2.message; }
+    finally{ btn.disabled=false; }
+  });
+})();
+
 function renderPhotos(){
   $("#p-photos").innerHTML = PHOTO_ALBUM
     ? `<div class="card album"><h3>Trip photo album</h3><p class="muted" style="margin:0">Add your photos and videos from the wedding and the trip. Everyone can view and download from the shared album.</p><a class="btn" href="${esc(PHOTO_ALBUM)}" target="_blank" rel="noopener">Open the shared album ↗</a></div>`
@@ -823,7 +902,7 @@ $("#people").addEventListener("submit",async e=>{
 function renderInfo(){ $("#info").innerHTML = INFO.map(c=>`<div class="card"><h3>${c.h}</h3>${c.p.map(x=>`<p>${x}</p>`).join("")}</div>`).join(""); }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-copy]");if(!b)return;const done=()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1500)};try{navigator.clipboard.writeText(b.dataset.copy).then(done,()=>{})}catch(err){}});
 
-function renderAll(){ renderWho(); renderStrip(); renderSchedule(); renderTravel(); renderMoney(); renderPeople(); }
+function renderAll(){ renderWho(); renderStrip(); renderSchedule(); renderTravel(); renderMoney(); renderPeople(); renderRecs(); }
 renderAll(); renderInfo(); renderPhotos();
 
 /* ================= Live data ================= */
