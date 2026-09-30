@@ -93,6 +93,12 @@ section.panel{display:flex;flex-direction:column;gap:22px}
 .ev .t{font-family:var(--f-mono);font-size:13px;color:var(--muted);padding-top:1px}
 .ev .what{font-weight:600}
 .ev .detail{font-size:14px;color:var(--muted)}
+.ev details.transit{margin-top:4px;font-size:14px}
+.ev details.transit summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--accent)}
+.ev details.transit summary::-webkit-details-marker{display:none}
+.ev details.transit summary::before{content:"▸";font-size:11px}
+.ev details.transit[open] summary::before{content:"▾"}
+.ev details.transit .tb{color:var(--muted);margin-top:3px}
 .ev.highlight .what{font-family:var(--f-display);font-weight:400;font-size:19px}
 .chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .chip{font-size:12px;padding:1px 8px;border-radius:99px;background:var(--sunk);color:var(--muted)}
@@ -398,14 +404,14 @@ const SCHEDULE = {
   madrid:[
     {d:"Thu",n:"1",ev:[
       {t:"8:20 am",what:"Land at Madrid-Barajas",detail:"Iberia IB0342 from Chicago O'Hare, Terminal 4S",who:["Oliver","Meredith"],map:"mad"},
-      {t:"~9:30 am",go:true,what:"Uber or transit into the city",detail:"Uber is about 30 minutes to the rental. Transit: Cercanías C1 from Terminal 4 to Atocha (about €2.60), then Metro Line 1 to Antón Martín, or the 24-hour Airport Express bus 203 (€5). Check-in isn't until 3:00 pm, so plan to drop bags or grab breakfast. Details on the Info tab.",who:["Oliver","Meredith"],map:"madapt"},
+      {t:"~9:30 am",go:true,what:"Uber into the city",detail:"About 30 minutes to the rental. Check-in isn't until 3:00 pm, so plan to drop bags or grab breakfast.",transit:"Cercanías C1 from Terminal 4 to Atocha (about €2.60), then Metro Line 1 to Antón Martín. Or the 24-hour Airport Express bus 203 (€5). Details on the Info tab.",who:["Oliver","Meredith"],map:"madapt"},
       {t:"1:30 pm",what:"Land at Madrid-Barajas",detail:"American Airlines 126 from Chicago O'Hare, Terminal 4",who:AA_GROUP,map:"mad"},
-      {t:"~2:30 pm",go:true,what:"Uber or transit to the Madrid rental",detail:"Allow about an hour for passport control and bags. Then about 30 minutes by Uber, or Cercanías C1 from Terminal 4 to Atocha and Metro Line 1 to Antón Martín, or the Airport Express bus 203. Details on the Info tab.",who:AA_GROUP,map:"madapt"},
+      {t:"~2:30 pm",go:true,what:"Uber to the Madrid rental",detail:"Allow about an hour for passport control and bags, then about 30 minutes by Uber.",transit:"Cercanías C1 from Terminal 4 to Atocha, then Metro Line 1 to Antón Martín. Or the Airport Express bus 203. Details on the Info tab.",who:AA_GROUP,map:"madapt"},
       {t:"From 3 pm",what:"Check in to the Madrid rental",detail:"Calle de Santa Ana 6. 3 nights.",map:"madapt"},
-      {t:"5–8 pm",what:"Pick up your tuxedo",detail:"Trajes Guzmán, C/ Alberto Aguilera 16. Open Thursday 10 am–2 pm and 5–8 pm (closed 2–5 pm). Allow about an hour: roughly 15–20 minutes each way by Uber, plus time to try it on. Metro works too: Line 2 to San Bernardo (from Sol or Sevilla), then a short walk. If anything needs adjusting, they can do it until roughly 2 pm Friday, before the wedding. Confirm with the store.",map:"tux",who:"TUX"},
+      {t:"5–8 pm",what:"Pick up your tuxedo",detail:"Trajes Guzmán, C/ Alberto Aguilera 16. Open Thursday 10 am–2 pm and 5–8 pm (closed 2–5 pm). Allow about an hour: roughly 15–20 minutes each way by Uber, plus time to try it on. If anything needs adjusting, they can do it until roughly 2 pm Friday, before the wedding. Confirm with the store.",transit:"Metro Line 2 to San Bernardo (from Sol or Sevilla), then a short walk.",map:"tux",who:"TUX"},
     ]},
     {d:"Fri",n:"2",ev:[
-      {t:"4:15 pm",go:true,what:"Uber or Metro to the church",detail:"Uber is about 15–20 minutes from the rental. Book a few cars; eight people in black tie won't fit in one. Metro option: Line 1 from Sol to Iglesia, then a short walk. Aim to arrive by 4:40 to find seats.",map:"church"},
+      {t:"4:15 pm",go:true,what:"Uber to the church",detail:"About 15–20 minutes from the rental. Aim to arrive by 4:40 to find seats. Book a few cars; eight people in black tie won't fit in one.",transit:"Metro Line 1 from Sol to Iglesia, then a short walk.",map:"church"},
       {t:"5:00 pm",what:"Wedding ceremony",detail:"Basílica Parroquia La Milagrosa, Calle de García de Paredes 45. Black tie.",hl:true,map:"church"},
       {t:"7:00 pm",what:"Reception at La Quinta de Jarama",detail:"A-1 Carretera de Burgos, km 26. Runs until 3:00 am. Buses from the ceremony and back into the city.",hl:true,map:"quinta"},
     ]},
@@ -413,7 +419,7 @@ const SCHEDULE = {
       {t:"Day",what:"Time with Luke",detail:"The guys spend the day with the groom. Plans to come.",tag:"Details to come",who:GUYS},
       {t:"Day",what:"Madrid, open day",detail:"Plans to come.",tag:"To come",who:["Mia","Lam"]},
       {t:"Morning",what:"Sleep in",detail:"No rush after the wedding.",who:SEGOVIA},
-      {t:"~12:15 pm",go:true,what:"Uber or Metro to the bus station",detail:"Allow about 45 minutes before the bus. Station to confirm. Another option is the Renfe Avant train from Chamartín: about 30 minutes to Segovia-Guiomar, then a local bus of about 15 minutes into town.",tag:"To confirm",who:SEGOVIA},
+      {t:"~12:15 pm",go:true,what:"Uber to the bus station",detail:"Allow about 45 minutes before the bus. Station to confirm.",transit:"Metro to the bus station once it's confirmed. Or the Renfe Avant train from Chamartín: about 30 minutes to Segovia-Guiomar, then a local bus of about 15 minutes into town.",tag:"To confirm",who:SEGOVIA},
       {t:"By 1:00 pm",what:"Bus to Segovia",detail:"1:00 pm is the latest departure to make lunch. Exact time to pick. Round trip is about €15.",who:SEGOVIA},
       {t:"Midday",what:"Lunch in Segovia",detail:"A typical restaurant or a supermarket picnic, to be decided.",who:SEGOVIA},
       {t:"Afternoon",what:"Walking tour and medieval market",detail:"Segovia is small and walkable. There's a medieval market that weekend.",who:SEGOVIA},
@@ -423,7 +429,7 @@ const SCHEDULE = {
   ],
   sansebastian:[
     {d:"Sun",n:"4",ev:[
-      {t:"9:15 am",go:true,what:"Check out and Uber to Barajas Terminal 1",detail:"About 25–30 minutes by Uber. Leaves time to find the Hertz counter and do paperwork before 10:00 am. By Metro it's roughly an hour with two changes (Line 1 to Tribunal, Line 10 to Nuevos Ministerios, Line 8 to Aeropuerto T1-T2-T3), which is slow with luggage.",map:"hertz"},
+      {t:"9:15 am",go:true,what:"Check out and Uber to Barajas Terminal 1",detail:"About 25–30 minutes. Leaves time to find the Hertz counter and do paperwork before 10:00 am.",transit:"Roughly an hour with two changes: Line 1 to Tribunal, Line 10 to Nuevos Ministerios, Line 8 to Aeropuerto T1-T2-T3. Slow with luggage.",map:"hertz"},
       {t:"10:00 am",what:"Pick up the van",detail:"Hertz, Madrid-Barajas Terminals 1 & 4. Ford Tourneo Connect or similar, 7 seats, automatic. Bring the International Driving Permits.",map:"hertz"},
       {t:"Day",what:"Drive to San Sebastián",detail:"About 450 km north, roughly 5 hours with a stop."},
       {t:"5:00 pm",what:"Return the van",detail:"Drop-off location to confirm.",tag:"To confirm"},
@@ -433,19 +439,19 @@ const SCHEDULE = {
     {d:"Mon",n:"5",ev:[{t:"—",what:"San Sebastián, open day",detail:"Plans to come.",tag:"To come"}]},
     {d:"Tue",n:"6",ev:[
       {t:"12:00 pm",what:"Check out of the apartment",detail:"",map:"ssapt"},
-      {t:"~4:00 pm",go:true,what:"Taxi or bus to San Sebastián Airport",detail:"About 25–30 minutes by taxi to Hondarribia. Lurraldebus E21 also runs from the city to the airport; check times before leaving. Arrives about 1.5 hours before the flight to check bags.",who:BCN_FLY,map:"eas"},
+      {t:"~4:00 pm",go:true,what:"Taxi to San Sebastián Airport",detail:"About 25–30 minutes to Hondarribia. Arrives about 1.5 hours before the flight to check bags.",transit:"Lurraldebus E21 runs from the city to the airport. Check times before leaving.",who:BCN_FLY,map:"eas"},
       {t:"5:55 pm",what:"Fly San Sebastián → Barcelona",detail:"Vueling 2487, EAS → BCN, lands 7:00 pm. Bag fees are extra.",who:BCN_FLY,map:"eas"},
     ]},
   ],
   barcelona:[
     {d:"Tue",n:"6",ev:[
       {t:"—",what:"Danny flies out after San Sebastián",farewell:true},
-      {t:"~7:30 pm",go:true,what:"Taxi or train to the apartment",detail:"About 20–30 minutes by taxi from BCN to Sants. Transit: the R2 Nord train from Terminal 2 goes straight to Sants Estació in about 20 minutes (about €5), with a free shuttle from Terminal 1. Or Metro L9 Sud, changing at Collblanc to L5. The apartment is a short walk from Sants Estació.",who:BCN_APT,map:"apt"},
+      {t:"~7:30 pm",go:true,what:"Taxi to the apartment",detail:"About 20–30 minutes from BCN to Sants.",transit:"R2 Nord train from Terminal 2 straight to Sants Estació in about 20 minutes (about €5), with a free shuttle from Terminal 1. Or Metro L9 Sud, changing at Collblanc to L5. The apartment is a short walk from Sants Estació.",who:BCN_APT,map:"apt"},
       {t:"~8:00 pm",what:"Check in at BeBarceloner Sants Apartments",detail:"No front desk. Online registration and the Akiles app are needed before arrival.",who:BCN_APT,map:"apt"},
     ]},
     {d:"Wed–Fri",n:"7–9",ev:[{t:"—",what:"Barcelona, open days",detail:"Plans to come.",tag:"To come"}]},
     {d:"Sat",n:"10",ev:[
-      {t:"9:30 am",go:true,what:"Check out and taxi or Metro to BCN Terminal 1",detail:"About 25 minutes by taxi. Transit: Metro L5 from Sants Estació to Collblanc, then L9 Sud to Aeroport T1 (about 35 minutes), or the Aerobús from Plaça Espanya. Arrives close to 2.5 hours before an international flight.",who:["Joe","Lake","Lam"],map:"bcn"},
+      {t:"9:30 am",go:true,what:"Check out and taxi to BCN Terminal 1",detail:"About 25 minutes. Arrives close to 2.5 hours before an international flight.",transit:"Metro L5 from Sants Estació to Collblanc, then L9 Sud to Aeroport T1 (about 35 minutes). Or the Aerobús from Plaça Espanya.",who:["Joe","Lake","Lam"],map:"bcn"},
       {t:"11:00 am",what:"Check out of the apartment",detail:"Latest check-out.",who:["Oliver"],map:"apt"},
       {t:"12:20 pm",what:"Flight out to Chicago",detail:"American Airlines 41, BCN Terminal 1 → Chicago O'Hare, lands 3:10 pm.",who:["Joe","Lake","Lam"],map:"bcn"},
     ]},
@@ -636,7 +642,8 @@ function whoChips(e,leg){
 }
 function evHTML(e,leg,withChips){
   const detail = e.detail||e.map ? `<div class="detail">${esc(e.detail||"")}${mapLink(e.map)}</div>` : "";
-  return `<div class="ev${e.hl?" highlight":""}${e.go?" go":""}"><div class="t">${e.t}</div><div><div class="what">${esc(e.what)}${e.tag?`<span class="tag">${e.tag}</span>`:""}</div>${detail}${withChips?whoChips(e,leg):""}</div></div>`;
+  const transit = e.transit ? `<details class="transit"><summary>Transit option</summary><div class="tb">${esc(e.transit)}</div></details>` : "";
+  return `<div class="ev${e.hl?" highlight":""}${e.go?" go":""}"><div class="t">${e.t}</div><div><div class="what">${esc(e.what)}${e.tag?`<span class="tag">${e.tag}</span>`:""}</div>${detail}${transit}${withChips?whoChips(e,leg):""}</div></div>`;
 }
 function legBlock(leg,p,withChips){
   const days = SCHEDULE[leg].map(d=>({...d,ev:d.ev.filter(e=>p?evFor(e,leg,p):true)})).filter(d=>d.ev.length);
