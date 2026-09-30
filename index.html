@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Viva España 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+.signedin{font-size:13.5px;color:var(--muted);margin-bottom:12px}
+.claimbar form,.claimbar{flex-wrap:wrap}
+/* Layout: one column; the three city tiles pick which leg of the schedule shows, sticky tabs switch between Schedule, Flights & stays, Money and Info. */
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --sunk:#eceef2; --fg:#1b2130; --muted:#5d6577; --line:#d9dde5;
+  --madrid:#9e2b3a; --sansebastian:#1d6f6a; --barcelona:#b06d0c;
+  --accent:#243b7a; --accent-fg:#ffffff; --leg-ink:#ffffff;
+  --good:#2b7a4b; --bad:#b0392e; --good-bg:#e4f2e9; --bad-bg:#f8e6e3;
+  --f-display:"Young Serif", Georgia, "Times New Roman", serif;
+  --f-body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12151c; --surface:#1a1e27; --sunk:#222733; --fg:#e8eaf0; --muted:#9aa2b3; --line:#2e3441;
+  --madrid:#e0707e; --sansebastian:#5cc2b9; --barcelona:#e8a94a;
+  --accent:#8fa6ea; --accent-fg:#0e1220; --leg-ink:#12151c;
+  --good:#6fcf95; --bad:#f08a7e; --good-bg:#17301f; --bad-bg:#3a1c19; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#12151c; --surface:#1a1e27; --sunk:#222733; --fg:#e8eaf0; --muted:#9aa2b3; --line:#2e3441;
+  --madrid:#e0707e; --sansebastian:#5cc2b9; --barcelona:#e8a94a;
+  --accent:#8fa6ea; --accent-fg:#0e1220; --leg-ink:#12151c;
+  --good:#6fcf95; --bad:#f08a7e; --good-bg:#17301f; --bad-bg:#3a1c19; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--f-body);padding-inline:16px;padding-block:0 48px}
+.wrap{max-width:880px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;text-wrap:balance;margin:0;line-height:1.2}
+h2.sec{font-size:22px}
+a{color:var(--accent)}
+.mono,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.label{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.map{font-size:12.5px;font-weight:600;text-decoration:none;white-space:nowrap;margin-left:6px}
+.map:hover{text-decoration:underline}
+
+header{padding-block:28px 18px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+header h1{font-size:clamp(30px,6vw,44px)}
+header .sub{color:var(--muted);margin-top:4px}
+.whoami{display:flex;align-items:center;gap:8px}
+.whoami select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-weight:600}
+
+/* City tiles */
+.strip{display:grid;grid-template-columns:3fr 2fr 4fr;gap:6px;margin-bottom:6px}
+.leg{border:0;text-align:left;cursor:pointer;border-radius:var(--r);padding:12px 14px;min-width:0;color:var(--leg-ink);opacity:.55;transition:opacity .15s, transform .15s}
+.leg:hover{opacity:.8}
+.leg[aria-pressed="true"]{opacity:1;box-shadow:0 0 0 2px var(--bg),0 0 0 4px currentColor}
+.leg.madrid{background:var(--madrid)} .leg.sansebastian{background:var(--sansebastian)} .leg.barcelona{background:var(--barcelona)}
+.leg .city{font-family:var(--f-display);font-size:18px;line-height:1.15;display:block}
+.leg .dates{font-family:var(--f-mono);font-size:12px;opacity:.9;display:block}
+.leg .who{font-size:12.5px;margin-top:6px;display:block}
+.strip-note{font-size:13px;color:var(--muted);margin-bottom:18px}
+@media (max-width:620px){.strip{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.leg{transition:none}}
+
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:22px;overflow-x:auto}
+nav.tabs button{background:none;border:0;padding:12px 14px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+
+section.panel{display:flex;flex-direction:column;gap:22px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;min-width:0}
+
+/* Schedule */
+.leghead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:8px;border-bottom:2px solid currentColor}
+.leghead h2{font-size:24px}
+.leghead.madrid{color:var(--madrid)} .leghead.sansebastian{color:var(--sansebastian)} .leghead.barcelona{color:var(--barcelona)}
+.leghead .dates{font-family:var(--f-mono);font-size:13px}
+.day{display:grid;grid-template-columns:86px 1fr;gap:14px;padding-block:14px;border-bottom:1px solid var(--line)}
+.day:last-child{border-bottom:0}
+.day .date{font-family:var(--f-mono);font-size:13px;color:var(--muted);line-height:1.3}
+.day .date b{display:block;font-family:var(--f-display);font-weight:400;font-size:22px;color:var(--fg)}
+.events{display:flex;flex-direction:column;gap:10px;min-width:0}
+.ev{display:grid;grid-template-columns:78px 1fr;gap:10px}
+.ev .t{font-family:var(--f-mono);font-size:13px;color:var(--muted);padding-top:1px}
+.ev .what{font-weight:600}
+.ev .detail{font-size:14px;color:var(--muted)}
+.ev.highlight .what{font-family:var(--f-display);font-weight:400;font-size:19px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.chip{font-size:12px;padding:1px 8px;border-radius:99px;background:var(--sunk);color:var(--muted)}
+.chip.me{background:var(--accent);color:var(--accent-fg)}
+.tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:1px 7px;border-radius:4px;border:1px dashed var(--line);color:var(--muted);vertical-align:2px;margin-left:6px}
+.legnav{display:flex;justify-content:space-between;gap:10px;padding-top:4px}
+@media (max-width:520px){.day{grid-template-columns:1fr;gap:6px}.day .date b{display:inline;margin-right:6px}.ev{grid-template-columns:64px 1fr}}
+
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{text-align:left;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+
+.lodging{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:760px){.lodging{grid-template-columns:1fr}}
+.lodging .card h3{font-size:18px}
+.lodging .card .city{font-weight:600;font-size:13px}
+.lodging .madrid .city{color:var(--madrid)} .lodging .sansebastian .city{color:var(--sansebastian)} .lodging .barcelona .city{color:var(--barcelona)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:14px;margin:8px 0 0}
+.kv dt{color:var(--muted)} .kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.fill{display:flex;gap:6px;flex-wrap:wrap}
+.fill input{min-width:0;flex:1 1 110px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:13.5px}
+.btn{background:var(--accent);color:var(--accent-fg);border:0;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer}
+.btn.sm{padding:5px 10px;font-size:13px;border-radius:6px}
+.btn.ghost{background:none;color:var(--accent);border:1px solid var(--line)}
+.btn:disabled{opacity:.5;cursor:default}
+.locked{font-size:13.5px}
+.locked .sub{color:var(--muted);font-size:12.5px}
+
+/* Money */
+.pickname{padding:26px 18px;text-align:center;border:1px dashed var(--line);border-radius:var(--r)}
+.pickname h3{font-size:20px;margin-bottom:6px}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:640px){.summary{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.stat .v{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:17px;margin-top:2px}
+.stat .v2{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.stat.owe .v{color:var(--bad)} .stat.owed .v{color:var(--good)}
+.debts{display:flex;flex-direction:column}
+.debt{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.debt:last-child{border-bottom:0}
+.debt .who{font-weight:600}
+.debt .amt{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.debt .amt small{display:block;color:var(--muted);font-size:12px}
+.debt .handles{grid-column:1/-1;font-size:13px;color:var(--muted)}
+.debt .payrow{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.debt .payrow select,.debt .payrow input{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:13.5px}
+.debt .payrow input{width:110px}
+.status-owe{color:var(--bad)} .status-owed{color:var(--good)}
+form.add{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+form.add .f{display:flex;flex-direction:column;gap:4px;min-width:0}
+form.add .span2{grid-column:span 2} form.add .span3{grid-column:span 3} form.add .span6{grid-column:1/-1}
+form.add input,form.add select{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+@media (max-width:640px){form.add{grid-template-columns:1fr 1fr}form.add .span2,form.add .span3{grid-column:span 1}form.add .wide{grid-column:1/-1}}
+.preview{font-size:12.5px;color:var(--muted);min-height:1.2em}
+.preview b{color:var(--fg);font-weight:600}
+.picks{display:flex;flex-wrap:wrap;gap:6px}
+.pick{border:1px solid var(--line);background:var(--bg);border-radius:99px;padding:4px 11px;font-size:13.5px;cursor:pointer}
+.pick[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.quick{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.quick button,.linkbtn{background:none;border:0;padding:0;color:var(--accent);font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;align-self:flex-start}
+.seg button{border:0;background:var(--bg);padding:8px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.formmsg{font-size:13.5px}
+.formmsg.err{color:var(--bad)} .formmsg.ok{color:var(--good)}
+.x{background:none;border:0;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 4px}
+.x:hover{color:var(--bad)}
+.empty{padding:18px;text-align:center;color:var(--muted);font-size:14px;border:1px dashed var(--line);border-radius:8px}
+.pill{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:99px}
+.pill.madrid{background:color-mix(in srgb,var(--madrid) 16%,transparent);color:var(--madrid)}
+.pill.sansebastian{background:color-mix(in srgb,var(--sansebastian) 16%,transparent);color:var(--sansebastian)}
+.pill.barcelona{background:color-mix(in srgb,var(--barcelona) 18%,transparent);color:var(--barcelona)}
+.pill.general{background:var(--sunk);color:var(--muted)}
+.method{font-size:12px;padding:1px 7px;border-radius:4px;background:var(--sunk);color:var(--muted)}
+.cardhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+
+/* Info */
+.infogrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.infogrid{grid-template-columns:1fr}}
+.infogrid h3{font-size:18px;margin-bottom:6px}
+.infogrid p{margin:4px 0;font-size:14.5px}
+.people{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media (max-width:640px){.people{grid-template-columns:1fr}}
+.person{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;min-width:0}
+.person.me{border-color:var(--accent)}
+.person .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.person .nm{font-family:var(--f-display);font-size:17px}
+.person .none{font-size:13.5px;color:var(--muted);margin-top:6px}
+.person form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.person form label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
+.person form input{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:13.5px;width:100%}
+.person form .full{grid-column:1/-1}
+.person form .row{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.copy{background:none;border:1px solid var(--line);border-radius:5px;font-size:12px;padding:1px 7px;cursor:pointer;color:var(--muted);margin-left:4px}
+/* v3 additions */
+.views{display:flex;gap:4px;background:var(--sunk);border-radius:10px;padding:4px;flex-wrap:wrap}
+.views button{flex:1 1 auto;border:0;background:none;border-radius:7px;padding:8px 12px;font-weight:600;color:var(--muted);cursor:pointer}
+.views button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.views .vc{font-family:var(--f-mono);font-weight:500;font-size:12.5px;margin-left:4px}
+.summary.two{grid-template-columns:1fr 1fr}
+#payto,#owedme{display:flex;flex-direction:column;gap:10px}
+#payto .debt,#owedme .debt{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+ul.bd.items{gap:0;margin-top:8px;font-size:13.5px}
+ul.bd.items li{display:grid;grid-template-columns:1fr auto auto;gap:4px 12px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+ul.bd.items li .lbl{min-width:0}
+ul.bd.items li.done .lbl,ul.bd.items li.done .num{color:var(--muted);text-decoration:line-through}
+.paid{font-size:12.5px;font-weight:600;color:var(--good);white-space:nowrap}
+.debt .payrow select{margin-left:4px}
+@media (max-width:520px){ul.bd.items li{grid-template-columns:1fr auto}ul.bd.items li .act{grid-column:1/-1}}
+details.fold{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);scroll-margin-top:64px}
+details.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:14px 18px}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary .ft{font-family:var(--f-display);font-size:18px;display:flex;align-items:baseline;gap:8px}
+details.fold>summary .ft::before{content:"▸";font-family:var(--f-body);font-size:13px;color:var(--muted);transition:transform .15s;display:inline-block}
+details.fold[open]>summary .ft::before{transform:rotate(90deg)}
+details.fold>summary .fm{font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+details.fold>summary:hover .ft{color:var(--accent)}
+details.fold .fb{padding:0 18px 16px;border-top:1px solid var(--line);padding-top:12px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+@media (prefers-reduced-motion:reduce){details.fold>summary .ft::before{transition:none}}
+ul.bd{list-style:none;margin:6px 0 0;padding:0;font-size:13px;display:flex;flex-direction:column;gap:3px}
+ul.bd li{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+ul.bd li .num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+ul.upcoming{font-size:14px;gap:8px}
+.debt .for{grid-column:1/-1}
+.ev.go .what{font-weight:500}
+.ev.go .what::before{content:"Travel · ";font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.claimbar{background:var(--surface);border:1px solid var(--accent);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.claimbar p{margin:0;font-size:14px}
+.whoami .lockednote{font-size:12.5px;color:var(--muted)}
+.leg.away{opacity:.35;filter:grayscale(.6)}
+.leg .away-note{font-size:12px;font-weight:600;margin-top:4px;display:block}
+.farewell{border-radius:var(--r);padding:22px 20px;text-align:center;background:var(--sunk)}
+.farewell h3{font-size:26px;margin-bottom:6px}
+.farewell p{margin:4px 0;color:var(--muted)}
+details.group{border-top:1px solid var(--line);padding-top:14px}
+details.group summary{cursor:pointer;font-family:var(--f-display);font-size:20px;list-style:none;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+details.group summary::-webkit-details-marker{display:none}
+details.group summary::after{content:"Show";font-family:var(--f-body);font-size:13px;color:var(--accent);font-weight:600}
+details.group[open] summary::after{content:"Hide"}
+details.group .gleg{margin-top:18px}
+.hint{font-size:13.5px;padding:10px 12px;border-radius:8px;background:var(--sunk);color:var(--muted)}
+.album{display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.album h3{font-size:22px}
+.admin-badge{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 6px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Viva España 2026</h1>
+      <div class="sub">Madrid · San Sebastián · Barcelona &nbsp;·&nbsp; <span class="mono">Oct 1–10</span> &nbsp;·&nbsp; <span id="countdown"></span></div>
+    </div>
+    <div class="whoami">
+      <label class="label" for="me" id="melabel">I'm</label>
+      <select id="me"><option value="">Pick your name</option></select>
+    </div>
+  </header>
+  <div id="claimbar"></div>
+
+  <div class="strip" id="strip" aria-label="Choose a city"></div>
+  <div class="strip-note" id="stripnote"></div>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="schedule" aria-selected="true">Schedule</button>
+    <button role="tab" data-tab="travel" aria-selected="false">Flights &amp; stays</button>
+    <button role="tab" data-tab="money" aria-selected="false">Money</button>
+    <button role="tab" data-tab="photos" aria-selected="false">Photos</button>
+    <button role="tab" data-tab="info" aria-selected="false">Info &amp; contacts</button>
+  </nav>
+
+  <section class="panel" id="p-schedule"></section>
+
+  <section class="panel" id="p-travel" hidden>
+    <div><h2 class="sec" style="margin-bottom:10px">Where we're staying</h2><div class="lodging" id="lodging"></div></div>
+    <div><h2 class="sec">Getting between cities</h2><div class="card" style="margin-top:10px"><div class="tablewrap"><table id="transfers"></table></div></div></div>
+    <div>
+      <h2 class="sec">Everyone's flights in and out</h2>
+      <p class="muted" style="margin:4px 0 10px;font-size:14px">You can add your own flight if it's blank. Once saved, it's locked; ask Oliver to change it.</p>
+      <div class="card"><div class="tablewrap"><table id="flights"></table></div></div>
+      <p class="formmsg" id="travelmsg"></p>
+    </div>
+  </section>
+
+  <section class="panel" id="p-money" hidden>
+    <div id="mine"></div>
+    <div class="actions" id="moneyactions"><button class="btn" type="button" data-panel="add" aria-expanded="false">+ Add a cost</button></div>
+    <div class="card" id="panel-add" hidden>
+      <h3 style="font-size:18px;margin-bottom:12px">Add a cost you paid</h3>
+      <form class="add" id="addform" novalidate>
+        <div class="f span3 wide"><label class="label" for="c-what">What was it for</label><input id="c-what" placeholder="e.g. dinner at bar nestor" maxlength="80" spellcheck="true" autocomplete="off"><div class="preview" id="c-preview"></div></div>
+        <div class="f span2"><label class="label" for="c-amt">Amount</label><input id="c-amt" inputmode="decimal" placeholder="0.00"></div>
+        <div class="f"><span class="label">Currency</span><div class="seg" id="c-cur"><button type="button" data-v="EUR" aria-pressed="true">€</button><button type="button" data-v="USD" aria-pressed="false">$</button></div></div>
+        <div class="f span2"><label class="label" for="c-paid">Paid by</label><select id="c-paid"></select></div>
+        <div class="f span2"><label class="label" for="c-leg">City</label><select id="c-leg"><option value="general">Whole trip</option><option value="madrid">Madrid</option><option value="sansebastian">San Sebastián</option><option value="barcelona">Barcelona</option></select></div>
+        <div class="f span2"><label class="label" for="c-date">Date</label><input id="c-date" type="date" min="2026-08-01" max="2026-10-31" value="2026-10-01"></div>
+        <div class="f span6"><span class="label">Split evenly between</span><div class="picks" id="c-split"></div>
+          <div class="quick"><button type="button" data-q="all">Everyone</button><button type="button" data-q="madrid">Madrid group</button><button type="button" data-q="sansebastian">San Sebastián group</button><button type="button" data-q="barcelona">Barcelona group</button><button type="button" data-q="none">Clear</button></div></div>
+        <div class="f span6" style="flex-direction:row;align-items:center;gap:12px;flex-wrap:wrap"><button class="btn" id="c-add" type="submit">Add cost</button><span class="formmsg" id="addmsg"></span></div>
+      </form>
+      <p class="muted" style="font-size:13px;margin:12px 0 0">Still to add once paid: Vueling bag fees ($12–192 per bag), International Driving Permits for Oliver and Lake, Segovia bus (about €15 each).</p>
+    </div>
+
+    <div class="views" id="views" role="tablist">
+      <button type="button" role="tab" data-view="owe" aria-selected="true">You owe <span class="vc" id="vc-owe"></span></button>
+      <button type="button" role="tab" data-view="owed" aria-selected="false">Owed to you <span class="vc" id="vc-owed"></span></button>
+      <button type="button" role="tab" data-view="history" aria-selected="false">All costs &amp; payments</button>
+    </div>
+    <div id="v-owe"><div class="debts" id="payto"></div><p class="formmsg" id="minemsg"></p></div>
+    <div id="v-owed" hidden><div class="debts" id="owedme"></div><p class="formmsg" id="owedmsg"></p></div>
+    <div id="v-history" hidden>
+      <div class="cardhead"><h3 style="font-size:18px" id="coststitle">Costs</h3><button class="linkbtn" id="toggleall" type="button"></button></div>
+      <div class="card" style="padding-block:6px"><div class="tablewrap"><table id="costs"></table></div></div>
+      <div class="cardhead" style="margin-top:18px"><h3 style="font-size:18px">Payments</h3></div>
+      <div class="card" style="padding-block:6px"><div class="tablewrap"><table id="payments"></table></div></div>
+    </div>
+    <p class="muted mono" style="font-size:12.5px;margin:0" id="ratenote"></p>
+  </section>
+
+  <section class="panel" id="p-photos" hidden></section>
+
+  <section class="panel" id="p-info" hidden>
+    <div>
+      <h2 class="sec">Contacts &amp; how to pay each other</h2>
+      <p class="muted" style="margin:4px 0 10px;font-size:14px">Add your own phone or WhatsApp and the apps you take money on. Everyone with access to this page can see them.</p>
+      <div class="people" id="people"></div>
+      <p class="formmsg" id="peoplemsg"></p>
+    </div>
+    <div class="infogrid" id="info"></div>
+  </section>
+</div>
+
+<script>
+/* ================= Locked trip data (changed only by republishing) ================= */
+const RATE = 1.134;               // $ per €1, fixed. Set Sep 29, 2026.
+const ADMIN_NAME = "Oliver";
+const PHOTO_ALBUM = "";           // shared album link goes here
+const PEOPLE = ["Oliver","Meredith","Mia","Chib","Lake","Lam","Joe","Danny"];
+const METHODS = ["Venmo","Zelle","PayPal","Cash App","Cash","Bank transfer","Other"];
+const LEGS = {
+  madrid:{city:"Madrid",dates:"Oct 1 – 4",nights:3,people:PEOPLE.slice()},
+  sansebastian:{city:"San Sebastián",dates:"Oct 4 – 6",nights:2,people:["Oliver","Meredith","Lake","Lam","Joe","Danny"]},
+  barcelona:{city:"Barcelona",dates:"Oct 6 – 10",nights:4,people:["Oliver","Meredith","Lake","Lam","Joe"]}
+};
+const LEG_KEYS = Object.keys(LEGS);
+const maps = q => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+const PLACES = {
+  mad:"Adolfo Suárez Madrid-Barajas Airport Terminal 4",
+  tux:"Trajes Guzmán, Calle de Alberto Aguilera 16, 28015 Madrid",
+  church:"Basílica Parroquia La Milagrosa, Calle de García de Paredes 45, 28010 Madrid",
+  quinta:"La Quinta de Jarama, Carretera de Burgos km 26, 28702 Madrid",
+  madapt:"Calle de Santa Ana 6, 28005 Madrid, Spain",
+  hertz:"Hertz, Madrid-Barajas Airport Terminal 1",
+  ssapt:"Zabaleta Kalea 36, 20002 Donostia-San Sebastián, Spain",
+  eas:"San Sebastián Airport (EAS), Hondarribia",
+  bcn:"Barcelona-El Prat Airport (BCN) Terminal 1",
+  apt:"BeBarceloner Sants Apartments, Carrer d'Eusebi Planas 9-11, 08014 Barcelona",
+};
+/* Events: `who` limits an event to those people; without it, it applies to everyone on that leg.
+   `farewell` events show only in the full group schedule. */
+const GUYS = ["Oliver","Joe","Lake","Danny","Chib"], GIRLS = ["Meredith","Mia","Lam"];
+const AA_GROUP = ["Mia","Chib","Lake","Lam","Joe","Danny"], SS_GROUP = ["Oliver","Meredith","Lake","Lam","Joe","Danny"];
+const BCN_FLY = ["Oliver","Meredith","Lake","Joe","Lam"], BCN_APT = ["Oliver","Lake","Lam","Joe"];
+/* `go:true` marks travel-time buffers (Uber, taxi, airport time). Durations are rough estimates. */
+const SCHEDULE = {
+  madrid:[
+    {d:"Thu",n:"1",ev:[
+      {t:"8:20 am",what:"Land at Madrid-Barajas",detail:"Iberia IB0342 from Chicago O'Hare, Terminal 4S",who:["Oliver","Meredith"],map:"mad"},
+      {t:"~9:30 am",go:true,what:"Uber into the city",detail:"About 30 minutes to the rental. Check-in isn't until 3:00 pm, so plan to drop bags or grab breakfast.",who:["Oliver","Meredith"],map:"madapt"},
+      {t:"1:30 pm",what:"Land at Madrid-Barajas",detail:"American Airlines 126 from Chicago O'Hare, Terminal 4",who:AA_GROUP,map:"mad"},
+      {t:"~2:30 pm",go:true,what:"Uber to the Madrid rental",detail:"Allow about an hour for passport control and bags, then about 30 minutes by Uber.",who:AA_GROUP,map:"madapt"},
+      {t:"From 3 pm",what:"Check in to the Madrid rental",detail:"Calle de Santa Ana 6. 3 nights.",map:"madapt"},
+      {t:"5–8 pm",what:"Pick up your tuxedo",detail:"Trajes Guzmán, C/ Alberto Aguilera 16. Open Thursday 10 am–2 pm and 5–8 pm (closed 2–5 pm). Allow about an hour: roughly 15–20 minutes each way by Uber, plus time to try it on. Backup: Friday 10 am–2 pm, before the wedding.",map:"tux",who:"TUX"},
+    ]},
+    {d:"Fri",n:"2",ev:[
+      {t:"4:15 pm",go:true,what:"Uber to the church",detail:"About 15–20 minutes from the rental. Aim to arrive by 4:40 to find seats. Book a few cars; eight people in black tie won't fit in one.",map:"church"},
+      {t:"5:00 pm",what:"Wedding ceremony",detail:"Basílica Parroquia La Milagrosa, Calle de García de Paredes 45. Black tie.",hl:true,map:"church"},
+      {t:"7:00 pm",what:"Reception at La Quinta de Jarama",detail:"A-1 Carretera de Burgos, km 26. Runs until 3:00 am. Buses from the ceremony and back into the city.",hl:true,map:"quinta"},
+    ]},
+    {d:"Sat",n:"3",ev:[
+      {t:"Day",what:"Time with Luke",detail:"The guys spend the day with the groom. Plans to come.",tag:"Details to come",who:GUYS},
+      {t:"Morning",what:"Sleep in",detail:"No rush after the wedding.",who:GIRLS},
+      {t:"~12:15 pm",go:true,what:"Uber to the bus station",detail:"Allow about 45 minutes before the bus. Station to confirm.",tag:"To confirm",who:GIRLS},
+      {t:"By 1:00 pm",what:"Bus to Segovia",detail:"1:00 pm is the latest departure to make lunch. Exact time to pick. Round trip is about €15.",who:GIRLS},
+      {t:"Midday",what:"Lunch in Segovia",detail:"A typical restaurant or a supermarket picnic, to be decided.",who:GIRLS},
+      {t:"Afternoon",what:"Walking tour and medieval market",detail:"Segovia is small and walkable. There's a medieval market that weekend.",who:GIRLS},
+      {t:"~7:00 pm",what:"Bus back to Madrid",detail:"Back around 8:00 pm, 10:00 pm at the latest.",who:GIRLS},
+    ]},
+    {d:"Sun",n:"4",ev:[{t:"11:00 am",what:"Check out of the Madrid rental",detail:"Latest check-out. The San Sebastián group leaves earlier for the van.",map:"madapt"}]},
+  ],
+  sansebastian:[
+    {d:"Sun",n:"4",ev:[
+      {t:"9:15 am",go:true,what:"Check out and Uber to Barajas Terminal 1",detail:"About 25–30 minutes. Leaves time to find the Hertz counter and do paperwork before 10:00 am.",map:"hertz"},
+      {t:"10:00 am",what:"Pick up the van",detail:"Hertz, Madrid-Barajas Terminals 1 & 4. Ford Tourneo Connect or similar, 7 seats, automatic. Bring the International Driving Permits.",map:"hertz"},
+      {t:"Day",what:"Drive to San Sebastián",detail:"About 450 km north, roughly 5 hours with a stop."},
+      {t:"5:00 pm",what:"Return the van",detail:"Drop-off location to confirm.",tag:"To confirm"},
+      {t:"5:00 pm",what:"Check in to the Zurriola Beach apartment",detail:"Zabaleta Kalea 36. Check-in instructions arrive 3 days before.",map:"ssapt"},
+      {t:"—",what:"Chib and Mia fly out after Madrid",farewell:true},
+    ]},
+    {d:"Mon",n:"5",ev:[{t:"—",what:"San Sebastián, open day",detail:"Plans to come.",tag:"To come"}]},
+    {d:"Tue",n:"6",ev:[
+      {t:"12:00 pm",what:"Check out of the apartment",detail:"",map:"ssapt"},
+      {t:"~4:00 pm",go:true,what:"Taxi to San Sebastián Airport",detail:"About 25–30 minutes to Hondarribia. Arrives about 1.5 hours before the flight to check bags.",who:BCN_FLY,map:"eas"},
+      {t:"5:55 pm",what:"Fly San Sebastián → Barcelona",detail:"Vueling 2487, EAS → BCN, lands 7:00 pm. Bag fees are extra.",who:BCN_FLY,map:"eas"},
+    ]},
+  ],
+  barcelona:[
+    {d:"Tue",n:"6",ev:[
+      {t:"—",what:"Danny flies out after San Sebastián",farewell:true},
+      {t:"~7:30 pm",go:true,what:"Taxi to the apartment",detail:"About 20–30 minutes from BCN to Sants.",who:BCN_APT,map:"apt"},
+      {t:"~8:00 pm",what:"Check in at BeBarceloner Sants Apartments",detail:"No front desk. Online registration and the Akiles app are needed before arrival.",who:BCN_APT,map:"apt"},
+    ]},
+    {d:"Wed–Fri",n:"7–9",ev:[{t:"—",what:"Barcelona, open days",detail:"Plans to come.",tag:"To come"}]},
+    {d:"Sat",n:"10",ev:[
+      {t:"9:30 am",go:true,what:"Check out and taxi to BCN Terminal 1",detail:"About 25 minutes. Arrives close to 2.5 hours before an international flight.",who:["Joe","Lake","Lam"],map:"bcn"},
+      {t:"11:00 am",what:"Check out of the apartment",detail:"Latest check-out.",who:["Oliver"],map:"apt"},
+      {t:"12:20 pm",what:"Flight out to Chicago",detail:"American Airlines 41, BCN Terminal 1 → Chicago O'Hare, lands 3:10 pm.",who:["Joe","Lake","Lam"],map:"bcn"},
+    ]},
+  ],
+};
+const LODGING = [
+  {leg:"madrid",name:"Madrid rental (Vrbo)",map:"madapt",rows:[["Address","Calle de Santa Ana 6, 28005 Madrid"],["Check in","Thu Oct 1, from 3:00 pm"],["Check out","Sun Oct 4, by 11:00 am"],["Guests","All 8"],["Note","€200 refundable deposit paid at the property"]]},
+  {leg:"sansebastian",name:"Zurriola Beach apartment (Vrbo)",map:"ssapt",rows:[["Address","Zabaleta Kalea 36, Principal-Der., 20002 Donostia"],["Check in","Sun Oct 4, 5:00 pm"],["Check out","Tue Oct 6, 12:00 pm"],["Guests","6 adults"],["Host","Hola Donostia Group, +34 647 355 455"],["Note","Check-in instructions arrive 3 days before"]]},
+  {leg:"barcelona",name:"BeBarceloner Sants Apartments",map:"apt",rows:[["Address","Eusebi Planas 9–11, 08014"],["Check in","Tue Oct 6, from 3:00 pm"],["Check out","Sat Oct 10, by 11:00 am"],["Room","Family apartment, city view, 4 adults"],["Staying","Oliver, Lake, Lam, Joe"],["Note","Meredith is staying with a friend in Barcelona"]]},
+];
+const TRANSFERS = [
+  {when:"Sun Oct 4",route:"Madrid → San Sebastián",how:"Hertz van, pick up 10:00 am at Barajas T1/T4",map:"hertz",who:"Oliver, Meredith, Lake, Lam, Joe, Danny"},
+  {when:"Tue Oct 6",route:"San Sebastián → Barcelona",how:"Vueling 2487, 5:55 pm → 7:00 pm",map:"eas",who:"Oliver, Meredith, Lake, Joe, Lam"},
+];
+const FIXED_FLIGHTS = {
+  Oliver:{arrive:{flight:"IB0342 ORD → MAD",when:"Thu Oct 1, 8:20 am"}},
+  Meredith:{arrive:{flight:"IB0342 ORD → MAD",when:"Thu Oct 1, 8:20 am"}},
+};
+const AA_IN = {flight:"AA 126 ORD → MAD",when:"Thu Oct 1, 1:30 pm"}, AA_OUT = {flight:"AA 41 BCN → ORD",when:"Sat Oct 10, 12:20 pm"};
+["Mia","Chib","Lake","Lam","Joe","Danny"].forEach(p=>FIXED_FLIGHTS[p]={...(FIXED_FLIGHTS[p]||{}),arrive:AA_IN});
+["Joe","Lake","Lam"].forEach(p=>FIXED_FLIGHTS[p]={...FIXED_FLIGHTS[p],depart:AA_OUT});
+const TUX_WEARERS = ["Oliver","Joe","Lake","Danny","Chib"];
+const mapLink = k => k ? `<a class="map" href="${maps(PLACES[k]||k)}" target="_blank" rel="noopener">Map ↗</a>` : "";
+const INFO = [
+  {h:"The wedding",p:[
+    `Valentina Martin &amp; Luke Zamarron · Friday, October 2`,
+    `Ceremony 5:00 pm at Basílica Parroquia La Milagrosa ${mapLink("church")}`,
+    `Reception at La Quinta de Jarama until 3:00 am ${mapLink("quinta")}`,
+    `Dress code: black tie. Buses run from the ceremony to the reception and back to the city.`,
+    `<a href="https://www.zola.com/wedding/valenandluke" target="_blank" rel="noopener">Wedding website ↗</a>`]},
+  {h:"Tuxedos",p:[
+    `Trajes Guzmán, C/ Alberto Aguilera 16, Madrid ${mapLink("tux")}`,
+    `<a href="https://www.trajesguzman.com/" target="_blank" rel="noopener">Store website ↗</a>`,
+    `Ready from Thursday, Oct 1. Each person picks up their own.`,
+    `Hours: Monday–Friday 10:00 am–2:00 pm and 5:00–8:00 pm; Saturday 10:00 am–2:00 pm. Closed 2–5 pm on weekdays.`,
+    `Phone: <span class="mono">+34 914 48 92 25</span><button class="copy" data-copy="+34 914 48 92 25">Copy</button> · Email: <span class="mono">aaguilera@trajesguzman.com</span>`,`Wearing them: Oliver, Joe, Lake, Danny, Chib.`]},
+  {h:"Rental van",p:[
+    `Hertz at Madrid-Barajas, Terminals 1 &amp; 4. Open 7:00 am to midnight. ${mapLink("hertz")}`,
+    `Counter: <span class="mono">+34 650 70 70 50</span><button class="copy" data-copy="+34 650 70 70 50">Copy</button>`,
+    `Drivers licensed outside the EU may need an International Driving Permit. Extra charges can apply to drivers under 25.`]},
+  {h:"Good to know",p:[
+    `Emergency number anywhere in Spain: <span class="mono">112</span>`,
+    `Spain is on CEST (UTC+2), 7 hours ahead of Chicago and 9 ahead of Seattle.`,
+    `Airports: Madrid ${mapLink("mad")} · San Sebastián ${mapLink("eas")} · Barcelona ${mapLink("bcn")}`]},
+];
+
+/* ================= Helpers ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const toEUR = (a,c) => c==="USD" ? a/RATE : a;
+const eur = v => "€"+Math.abs(v).toFixed(2);
+const usd = v => "$"+Math.abs(v*RATE).toFixed(2);
+const money = (a,c) => (c==="USD"?"$":"€")+Number(a).toFixed(2);
+const legName = k => k==="general" ? "Whole trip" : LEGS[k]?.city || k;
+const store = {get(k){try{return localStorage.getItem(k)||""}catch(e){return ""}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+const FIXES = {resturant:"restaurant",restaraunt:"restaurant",restuarant:"restaurant",resteraunt:"restaurant",dinnr:"dinner",dinnner:"dinner",lunc:"lunch",breakfest:"breakfast",brekfast:"breakfast",breakfeast:"breakfast",grocerys:"groceries",grocieries:"groceries",groceris:"groceries",taxy:"taxi",drinkz:"drinks",coffe:"coffee",cofee:"coffee",tickts:"tickets",tix:"tickets",tickit:"ticket",parkin:"parking",gass:"gas",resevation:"reservation",reservaton:"reservation",apartmnet:"apartment",appartment:"apartment",apartement:"apartment",hotle:"hotel",tapass:"tapas",paela:"paella",paellla:"paella",sangira:"sangria",pinxtos:"pintxos",pinchos:"pintxos",musuem:"museum",musem:"museum",airbnb:"Airbnb",vrbo:"Vrbo",uber:"Uber",cabify:"Cabify",bolt:"Bolt",renfe:"Renfe",vueling:"Vueling",iberia:"Iberia",hertz:"Hertz",expedia:"Expedia",zara:"Zara",sagrada:"Sagrada",familia:"Família",barca:"Barça",barcelona:"Barcelona",madrid:"Madrid",sebastian:"Sebastián",donostia:"Donostia",nestor:"Néstor",prado:"Prado",retiro:"Retiro",gaudi:"Gaudí",guell:"Güell",zurriola:"Zurriola"};
+const SMALL = new Set(["a","an","the","and","or","of","at","in","on","for","to","with","by","de","del","la","el","los","las","y","e"]);
+function tidy(raw){
+  const words = String(raw).replace(/\s+/g," ").trim().split(" ").filter(Boolean);
+  return words.map((w,i)=>{
+    const [,pre,core,post] = w.match(/^([^A-Za-zÀ-ÿ0-9]*)(.*?)([^A-Za-zÀ-ÿ0-9]*)$/);
+    if(/[A-Z].*[A-Z]/.test(core) && core.length<=5) return pre+core+post;
+    const fixed = FIXES[core.toLowerCase()] || core.toLowerCase();
+    if(/[A-Z]/.test(fixed)) return pre+fixed+post;
+    if(i>0 && SMALL.has(fixed)) return pre+fixed+post;
+    return pre+fixed.charAt(0).toUpperCase()+fixed.slice(1)+post;
+  }).join(" ");
+}
+
+/* ================= Identity & storage =================
+   Shared data lives in a Google Sheet behind a small Apps Script web app (API_URL).
+   Each person sets a 4-digit PIN the first time; the PIN is needed to add or change anything as that person.
+   Oliver's PIN can act for everyone. Picking a name without a PIN only changes what you see. */
+const API_URL = "https://script.google.com/macros/s/AKfycbzVI2m2j2MS2hA2INR5UXbAfC-wxuzwsWpGzOG2Wfjrt-FKatLoTdEONSWKV16-zPV8/exec";
+let DBREF=null, LOADED=false, LOAD_ERR=false, PDATA={};
+let AUTH = (()=>{ try{ const a=JSON.parse(store.get("spain26-auth")||"null"); return a&&PEOPLE.includes(a.person)&&/^\d{4}$/.test(a.pin)?a:null; }catch(e){ return null; } })();
+let IS_OWNER = !!AUTH?.admin;
+let ME = store.get("spain26-me"); if(!PEOPLE.includes(ME)) ME = AUTH?.person || "";
+const claimOf = p => PDATA[p]?.claimed ? p : null;
+const myClaim = () => AUTH?.person || "";
+const canActAs = p => !!DBREF && !!AUTH && (IS_OWNER || AUTH.person===p);
+const canWrite = () => !!DBREF && !!AUTH;
+const contactOf = p => PDATA[p]?.contact || {};
+const travelOf = (p,k) => FIXED_FLIGHTS[p]?.[k] || PDATA[p]?.travel?.[k] || null;
+function applyState(st){ PDATA={}; (st.people||[]).forEach(r=>PDATA[r.person]=r); LEDGER={s:{expenses:st.expenses||[],payments:st.payments||[]}}; DBREF=true; LOADED=true; LOAD_ERR=false; }
+async function api(action, data={}, withAuth=true){
+  const body = {action, ...data}; if(withAuth && AUTH){ body.person=AUTH.person; body.pin=AUTH.pin; }
+  let j;
+  try{ const r = await fetch(API_URL,{method:"POST",body:JSON.stringify(body)}); j = await r.json(); }
+  catch(e){ const err=new Error("Couldn't reach the trip storage. Check your connection and try again."); err.code="net"; throw err; }
+  if(j.state) applyState(j.state);
+  if(!j.ok){ const err=new Error(j.error||"Something went wrong."); err.code="api"; throw err; }
+  return j;
+}
+async function load(){
+  try{ const r=await fetch(API_URL); const j=await r.json(); if(j.state){ applyState(j.state); refresh(); } }
+  catch(e){ if(!LOADED){ LOAD_ERR=true; renderAll(); } }
+}
+function refresh(){
+  const busy = EDIT_CONTACT || EDITING || document.activeElement?.closest?.("form,#claimbar,.fill");
+  if(busy){ renderWho(); renderMoney(); } else renderAll();
+}
+async function writePerson(p, section, value){
+  const {_kind, ...v} = value;
+  await api("savePerson",{target:p,section,kind:_kind,value:v});
+}
+function saveAuth(a){ AUTH=a; IS_OWNER=!!a?.admin; try{ a?localStorage.setItem("spain26-auth",JSON.stringify(a)):localStorage.removeItem("spain26-auth"); }catch(e){} }
+
+function renderWho(){
+  const sel = $("#me");
+  sel.innerHTML = `<option value="">Pick your name</option>` + PEOPLE.map(p=>`<option value="${p}">${p}</option>`).join("");
+  sel.value = ME;
+  sel.disabled = !!AUTH && !IS_OWNER;
+  const bar = $("#claimbar");
+  if(!LOADED || !ME){ bar.innerHTML = LOAD_ERR ? `<div class="claimbar"><p>Couldn't load the shared costs and contacts. Check your connection and refresh.</p></div>` : ""; return; }
+  if(AUTH){
+    bar.innerHTML = `<div class="signedin">Unlocked as <b>${esc(AUTH.person)}</b>${IS_OWNER&&ME!==AUTH.person?` · viewing ${esc(ME)}`:""} · <button class="linkbtn" data-claim="out">Lock</button></div>`;
+    return;
+  }
+  const claimed = !!PDATA[ME]?.claimed;
+  bar.innerHTML = `<form class="claimbar" data-claimform="${claimed?"unlock":"set"}"><p>${claimed
+      ? `Enter ${esc(ME)}'s 4-digit PIN to add costs, flights and contact info.`
+      : `First time here? Set a 4-digit PIN for <b>${esc(ME)}</b>. You'll use it to add costs and your info. Only do this for your own name.`}</p>
+    <div style="display:flex;gap:8px;align-items:center"><input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="••••" aria-label="4-digit PIN" style="width:84px;letter-spacing:.3em;text-align:center;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px"><button class="btn sm" type="submit">${claimed?"Unlock":"Set PIN"}</button></div>
+    <p class="formmsg err" id="pinmsg" style="flex-basis:100%"></p></form>`;
+}
+$("#me").addEventListener("change",e=>{ ME = e.target.value; store.set("spain26-me",ME); renderAll(); });
+$("#claimbar").addEventListener("click",e=>{ const b=e.target.closest('[data-claim="out"]'); if(!b) return; saveAuth(null); renderAll(); });
+$("#claimbar").addEventListener("submit",async e=>{
+  const f=e.target.closest("[data-claimform]"); if(!f) return; e.preventDefault();
+  const pin=$("#pin").value.trim(), msg=$("#pinmsg"), btn=f.querySelector("button[type=submit]");
+  if(!/^\d{4}$/.test(pin)){ msg.textContent="Enter exactly 4 digits."; return; }
+  btn.disabled=true;
+  try{
+    const res = await api(f.dataset.claimform==="set"?"setPin":"verify",{person:ME,pin},false);
+    saveAuth({person:ME,pin,admin:!!res.admin}); renderAll();
+  }catch(err){ msg.textContent=err.message; btn.disabled=false; }
+});
+
+/* ================= Header, city tiles, tabs ================= */
+const legsOf = p => LEG_KEYS.filter(k=>LEGS[k].people.includes(p));
+let LEG = (()=>{const now=new Date(); return now>=new Date("2026-10-06T00:00:00+02:00")?"barcelona":now>=new Date("2026-10-04T00:00:00+02:00")?"sansebastian":"madrid";})();
+function renderStrip(){
+  const mine = ME ? legsOf(ME) : LEG_KEYS;
+  $("#strip").innerHTML = LEG_KEYS.map(k=>{ const l=LEGS[k], away=!mine.includes(k);
+    return `<button type="button" class="leg ${k}${away?" away":""}" data-leg="${k}" aria-pressed="${k===LEG}"><span class="city">${l.city}</span><span class="dates">${l.dates} · ${l.nights} nights · ${l.people.length} people</span><span class="who">${l.people.join(", ")}</span>${away?`<span class="away-note">You'll be home by then</span>`:""}</button>`;}).join("");
+  $("#stripnote").textContent = ME ? `Showing ${ME}'s plan. Tap a city to see that part. The full group schedule is at the bottom of the Schedule tab.` : "Pick your name at the top to see your own plan. Tap a city to see its schedule.";
+}
+$("#strip").addEventListener("click",e=>{const b=e.target.closest("[data-leg]");if(!b)return;LEG=b.dataset.leg;renderStrip();renderSchedule();showTab("schedule");});
+document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
+const TABS = ["schedule","travel","money","photos","info"];
+function showTab(t){ document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t)); TABS.forEach(x=>$("#p-"+x).hidden = x!==t); }
+(function(){
+  const now = new Date(), wed = new Date("2026-10-02T17:00:00+02:00"), end = new Date("2026-10-10T23:59:00+02:00");
+  const days = Math.ceil((wed-now)/864e5);
+  $("#countdown").textContent = now>end ? "Trip complete" : days>1 ? `Wedding in ${days} days` : days===1 ? "Wedding tomorrow" : now<new Date("2026-10-03T06:00:00+02:00") ? "Wedding day" : "On the road";
+  const h = location.hash.slice(1); if(LEGS[h]) LEG=h; else if(TABS.includes(h)) showTab(h);
+})();
+
+/* ================= Schedule ================= */
+const evFor = (e,leg,p) => { if(e.farewell) return false; if(!p) return true; if(!LEGS[leg].people.includes(p)) return false;
+  if(e.who==="TUX") return !TUX_WEARERS || TUX_WEARERS.includes(p); if(Array.isArray(e.who)) return e.who.includes(p); return true; };
+function whoChips(e,leg){
+  let who = e.who==="TUX" ? TUX_WEARERS : e.who; if(!who) return "";
+  return `<div class="chips">${who.map(p=>`<span class="chip${p===ME?" me":""}">${p}</span>`).join("")}</div>`;
+}
+function evHTML(e,leg,withChips){
+  const detail = e.detail||e.map ? `<div class="detail">${esc(e.detail||"")}${mapLink(e.map)}</div>` : "";
+  return `<div class="ev${e.hl?" highlight":""}${e.go?" go":""}"><div class="t">${e.t}</div><div><div class="what">${esc(e.what)}${e.tag?`<span class="tag">${e.tag}</span>`:""}</div>${detail}${withChips?whoChips(e,leg):""}</div></div>`;
+}
+function legBlock(leg,p,withChips){
+  const days = SCHEDULE[leg].map(d=>({...d,ev:d.ev.filter(e=>p?evFor(e,leg,p):true)})).filter(d=>d.ev.length);
+  return days.map(d=>`<div class="day"><div class="date"><b>${d.n}</b>${d.d} · Oct</div><div class="events">${d.ev.map(e=>evHTML(e,leg,withChips)).join("")}</div></div>`).join("");
+}
+function farewellCard(p){
+  const f = travelOf(p,"depart");
+  return `<div class="farewell"><h3>Safe travels back, ${esc(p)}!</h3><p>Thanks for coming to Spain for Valentina &amp; Luke.</p>${f?.flight?`<p>Your flight out: <b>${esc(f.flight)}</b>${f.when?`, ${esc(f.when)}`:""}</p>`:`<p>Add your flight out on the Flights &amp; stays tab.</p>`}</div>`;
+}
+function renderSchedule(){
+  const L = LEGS[LEG], i = LEG_KEYS.indexOf(LEG), prev = LEG_KEYS[i-1], next = LEG_KEYS[i+1];
+  let body;
+  if(ME && !L.people.includes(ME)) body = farewellCard(ME);
+  else {
+    body = legBlock(LEG,ME,!ME);
+    const last = ME ? legsOf(ME).slice(-1)[0] : null;
+    if(ME && last===LEG) body += `<div style="margin-top:14px">${farewellCard(ME)}</div>`;
+  }
+  const group = `<details class="group"${ME?"":" open"}><summary>Full group schedule</summary>${LEG_KEYS.map(k=>`<div class="gleg"><div class="leghead ${k}"><h2>${LEGS[k].city}</h2><span class="dates">${LEGS[k].dates}</span></div>${legBlockAll(k)}</div>`).join("")}</details>`;
+  $("#p-schedule").innerHTML = `<div><div class="leghead ${LEG}"><h2>${ME?`${esc(ME)} in `:""}${L.city}</h2><span class="dates">${L.dates}</span></div><div>${body}</div>
+    <div class="legnav">${prev?`<button class="linkbtn" data-go="${prev}">← ${LEGS[prev].city}</button>`:"<span></span>"}${next?`<button class="linkbtn" data-go="${next}">${LEGS[next].city} →</button>`:""}</div></div>${ME?group:""}`;
+}
+function legBlockAll(leg){
+  return SCHEDULE[leg].map(d=>`<div class="day"><div class="date"><b>${d.n}</b>${d.d} · Oct</div><div class="events">${d.ev.map(e=>e.farewell?`<div class="ev"><div class="t">—</div><div><div class="what">${esc(e.what)}</div></div></div>`:evHTML(e,leg,true)).join("")}</div></div>`).join("");
+}
+$("#p-schedule").addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b)return;LEG=b.dataset.go;renderStrip();renderSchedule();window.scrollTo({top:0,behavior:"smooth"});});
+
+/* ================= Flights & stays ================= */
+let EDITING=null;
+function renderTravel(){
+  $("#lodging").innerHTML = LODGING.map(l=>`<div class="card ${l.leg}"><div class="city">${LEGS[l.leg].city}</div><h3>${esc(l.name)}</h3><dl class="kv">${l.rows.map(r=>`<dt>${r[0]}</dt><dd>${esc(r[1])}${r[0]==="Address"&&l.map?mapLink(l.map):""}</dd>`).join("")}</dl></div>`).join("");
+  $("#transfers").innerHTML = `<tr><th>When</th><th>Route</th><th>How</th><th>Who</th></tr>`+TRANSFERS.map(t=>`<tr><td class="mono" style="white-space:nowrap">${t.when}</td><td>${t.route}</td><td>${t.how}${mapLink(t.map)}</td><td>${t.who}</td></tr>`).join("");
+  const cell = (p,kind) => {
+    const t = travelOf(p,kind), fixed = !!FIXED_FLIGHTS[p]?.[kind];
+    if(t && t.flight && EDITING!==p+kind) return `<div class="locked">${esc(t.flight)}<div class="sub">${esc(t.when||"")}</div>${IS_OWNER&&!fixed?`<button class="x" data-edit="${p}|${kind}">Edit</button>`:""}</div>`;
+    if(!canActAs(p)) return `<span class="muted">—</span>`;
+    const id=`${p}-${kind}`;
+    return `<div class="fill"><input id="${id}-f" placeholder="${kind==="arrive"?"Flight, e.g. AA 126":"Flight out"}" value="${esc(t?.flight||"")}" aria-label="${p} ${kind} flight"><input id="${id}-w" placeholder="${kind==="arrive"?"Lands, e.g. Oct 1 1:30pm":"Leaves, e.g. Oct 10 12:20pm"}" value="${esc(t?.when||"")}" aria-label="${p} ${kind} time"><button class="btn sm" data-save="${p}|${kind}">Save</button></div>`;
+  };
+  $("#flights").innerHTML = `<tr><th>Person</th><th>Arriving in Spain</th><th>Flight out</th></tr>`+PEOPLE.map(p=>`<tr><td style="font-weight:600">${p}${p===ME?' <span class="chip me">you</span>':""}</td><td>${cell(p,"arrive")}</td><td>${cell(p,"depart")}</td></tr>`).join("");
+}
+$("#flights").addEventListener("click",async e=>{
+  const ed=e.target.closest("[data-edit]"); if(ed){ const [p,k]=ed.dataset.edit.split("|"); EDITING=p+k; renderTravel(); return; }
+  const b=e.target.closest("[data-save]"); if(!b) return;
+  const [p,k]=b.dataset.save.split("|"), msg=$("#travelmsg");
+  const flight=$(`#${p}-${k}-f`).value.trim(), when=$(`#${p}-${k}-w`).value.trim();
+  if(!canActAs(p)){ msg.className="formmsg err"; msg.textContent=`Only ${p} can add ${p}'s flight.`; return; }
+  if(!flight){ msg.className="formmsg err"; msg.textContent="Add a flight number or a short description before saving."; return; }
+  if(travelOf(p,k)?.flight && !IS_OWNER){ msg.className="formmsg err"; msg.textContent="This flight is already filled in. Ask Oliver to change it."; return; }
+  b.disabled=true;
+  try{ await writePerson(p,"travel",{_kind:k,flight:flight.slice(0,60),when:when.slice(0,60)}); EDITING=null; renderTravel(); msg.className="formmsg ok"; msg.textContent=`Saved ${p}'s flight.`; }
+  catch(err){ msg.className="formmsg err"; msg.textContent=errText(err,"save flights"); }
+  finally{ b.disabled=false; }
+});
+
+/* ================= Money =================
+   Costs and payments live in each account's own ledger (db: ledger/<account id>/…), so only that account (or the admin) can add or remove them. */
+let LEDGER={}, SHOW_ALL=false;
+const allExpenses = () => Object.entries(LEDGER).flatMap(([uid,l])=>(l.expenses||[]).map(x=>({...x,_uid:uid})));
+const allPayments = () => Object.entries(LEDGER).flatMap(([uid,l])=>(l.payments||[]).map(x=>({...x,_uid:uid})));
+function pairwise(){
+  const owe={}; PEOPLE.forEach(a=>{owe[a]={};PEOPLE.forEach(b=>owe[a][b]=0);});
+  allExpenses().forEach(x=>{ const a=toEUR(+x.amount||0,x.currency); const s=(x.split||[]).filter(p=>p in owe); if(!s.length||!(x.paidBy in owe)) return; s.forEach(p=>{ if(p!==x.paidBy) owe[p][x.paidBy]+=a/s.length; }); });
+  allPayments().forEach(y=>{ if(y.from in owe && y.to in owe) owe[y.from][y.to]-=toEUR(+y.amount||0,y.currency); });
+  return owe;
+}
+function myPosition(){
+  const owe=pairwise(), iOwe=[], owedToMe=[];
+  /* Full amounts in both directions, no netting: what I owe each person, and separately what each person owes me. */
+  PEOPLE.forEach(o=>{ if(o===ME) return; if(owe[ME][o]>0.005) iOwe.push({who:o,eur:owe[ME][o]}); if(owe[o][ME]>0.005) owedToMe.push({who:o,eur:owe[o][ME]}); });
+  let share=0, paid=0;
+  allExpenses().forEach(x=>{const a=toEUR(+x.amount||0,x.currency);const s=x.split||[];if(s.includes(ME))share+=a/s.length;if(x.paidBy===ME)paid+=a;});
+  return {iOwe:iOwe.sort((a,b)=>b.eur-a.eur),owedToMe:owedToMe.sort((a,b)=>b.eur-a.eur),share,paid};
+}
+/* What a balance between ME and another person is made of: their costs you share, minus your costs they share, minus payments. */
+function breakdown(o){
+  const items=[];
+  allExpenses().forEach(x=>{ const s=x.split||[]; if(!s.length) return; const each=toEUR(+x.amount||0,x.currency)/s.length, key=x._uid+"/"+x.id;
+    if(x.paidBy===o && s.includes(ME)) items.push({what:x.what,eur:each,kind:"theirs",key});
+    else if(x.paidBy===ME && s.includes(o)) items.push({what:x.what,eur:-each,kind:"mine",key}); });
+  allPayments().forEach(y=>{ const a=toEUR(+y.amount||0,y.currency), d=y.at?new Date(y.at).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"";
+    if(y.from===ME && y.to===o) items.push({what:`You paid ${o}${d?" on "+d:""}${y.method?" by "+y.method:""}`,eur:-a,kind:"pay",item:y.item,date:d,method:y.method});
+    else if(y.from===o && y.to===ME) items.push({what:`${o} paid you${d?" on "+d:""}${y.method?" by "+y.method:""}`,eur:a,kind:"pay",item:y.item,date:d,method:y.method}); });
+  return items;
+}
+/* One row per cost. Owing: each cost `o` paid that I share gets its own "Paid" button. Otherwise: each cost I paid that `o` shares.
+   A payment tied to a cost (item) marks that row paid; untied payments show as their own lines. */
+function breakdownHTML(o,owing,actor){
+  const all=breakdown(o);
+  const costs=all.filter(i=>i.kind===(owing?"theirs":"mine")).sort((a,b)=>Math.abs(b.eur)-Math.abs(a.eur));
+  const pays=all.filter(i=>i.kind==="pay" && (owing ? i.eur<0 : i.eur>0));
+  const paidFor=new Map(pays.filter(p=>p.item).map(p=>[p.item,p]));
+  const rows=costs.map(i=>{ const v=Math.abs(i.eur), p=paidFor.get(i.key);
+    const label = `${esc(i.what)} <span class="muted">· ${owing?"your share":esc(o)+"'s share"}</span>`;
+    const right = p ? `<span class="paid">Paid${p.date?" "+esc(p.date):""}${p.method?" · "+esc(p.method):""}</span>`
+      : owing && actor ? `<button class="btn sm" data-payitem="${esc(o)}|${esc(i.key)}|${(v*RATE).toFixed(2)}">I paid ${usd(v)}</button>`
+      : actor ? `<button class="btn sm ghost" data-recv="${esc(o)}|${esc(i.key)}|${(v*RATE).toFixed(2)}">Mark received</button>` : "";
+    return `<li class="${p?"done":""}"><span class="lbl">${label}</span><span class="num">${usd(v)} <span class="muted">(${eur(v)})</span></span>${right?`<span class="act">${right}</span>`:""}</li>`; });
+  pays.filter(p=>!p.item).forEach(p=>{ const v=Math.abs(p.eur); rows.push(`<li><span class="lbl">${esc(p.what)}</span><span class="num">−${usd(v)} <span class="muted">(${eur(v)})</span></span></li>`); });
+  return rows.length ? `<ul class="bd items">${rows.join("")}</ul>` : "";
+}
+const forLabel = o => breakdown(o).filter(i=>i.kind==="theirs").map(i=>i.what).join(", ").slice(0,200);
+function handlesFor(p){
+  const c=contactOf(p), bits=[];
+  [["venmo","Venmo"],["zelle","Zelle"],["paypal","PayPal"],["cashapp","Cash App"]].forEach(([k,l])=>{if(c[k])bits.push(`${l}: <span class="mono">${esc(c[k])}</span>`)});
+  return bits.length ? bits.join(" · ") : `${esc(p)} hasn't added payment apps yet.`;
+}
+const methodOpts = sel => METHODS.map(m=>`<option${m===sel?" selected":""}>${m}</option>`).join("");
+const canDel = x => IS_OWNER || (!!AUTH && x.by===AUTH.person);
+function renderMoney(){
+  $("#ratenote").textContent = `Dollar and euro amounts convert at a fixed €1 = $${RATE}.`;
+  const mine=$("#mine"), actor=canActAs(ME);
+  if(!ME) mine.innerHTML = `<div class="pickname"><h3>Pick your name to see what you owe</h3><p class="muted" style="margin:0">Use the menu at the top. Your balance only shows for you.</p></div>`;
+  else if(!DBREF) mine.innerHTML = `<div class="pickname"><h3>Costs aren't available right now</h3><p class="muted" style="margin:0">Couldn't load costs yet. Check your connection and refresh.</p></div>`;
+  else {
+    const m=myPosition(), tot=a=>a.reduce((s,x)=>s+x.eur,0), oweT=tot(m.iOwe), owedT=tot(m.owedToMe);
+    mine.innerHTML = `<h2 class="sec" style="margin-bottom:10px">${esc(ME)}'s balance</h2>
+      <div class="summary two">
+        <div class="stat owe"><div class="label">You owe</div><div class="v">${usd(oweT)}</div><div class="v2">${eur(oweT)} · ${m.iOwe.length} ${m.iOwe.length===1?"person":"people"}</div></div>
+        <div class="stat owed"><div class="label">Owed to you</div><div class="v">${usd(owedT)}</div><div class="v2">${eur(owedT)} · ${m.owedToMe.length} ${m.owedToMe.length===1?"person":"people"}</div></div>
+      </div>
+`;
+    $("#payto").innerHTML = `${
+        m.iOwe.length ? m.iOwe.map(d=>`<div class="debt"><div class="who">${esc(d.who)}</div><div class="amt status-owe">${usd(d.eur)}<small>${eur(d.eur)}</small></div><div class="handles">${handlesFor(d.who)}</div>${actor?`<div class="payrow"><label class="muted" style="font-size:13px">Paying with <select aria-label="Paid with" data-m="${esc(d.who)}">${methodOpts("Venmo")}</select></label></div>`:""}<div class="for">${breakdownHTML(d.who,true,actor)}</div></div>`).join("")
+        : `<div class="empty" style="margin-top:8px">You don't owe anyone right now.</div>`}`;
+    $("#owedme").innerHTML = m.owedToMe.length ? m.owedToMe.map(d=>`<div class="debt"><div class="who">${esc(d.who)}</div><div class="amt status-owed">${usd(d.eur)}<small>${eur(d.eur)}</small></div>${actor?`<div class="payrow"><label class="muted" style="font-size:13px">Received by <select aria-label="Received by" data-r="${esc(d.who)}">${methodOpts("Venmo")}</select></label></div>`:""}<div class="for">${breakdownHTML(d.who,false,actor)}</div></div>`).join("") : `<div class="empty">No one owes you right now.</div>`;
+    $("#vc-owe").textContent = m.iOwe.length ? usd(oweT) : "";
+    $("#vc-owed").textContent = m.owedToMe.length ? usd(owedT) : "";
+  }
+  const personal = !!ME && !!DBREF;
+  document.querySelectorAll('#views [data-view="owe"],#views [data-view="owed"]').forEach(b=>b.hidden=!personal);
+  if(!personal && VIEW!=="history") setView("history");
+  $("#moneyactions").hidden=!canWrite(); if(!canWrite()){ $("#panel-add").hidden=true; }
+  $("#c-paid").disabled = !IS_OWNER;
+  if(!IS_OWNER && myClaim()){ $("#c-paid").value=myClaim(); }
+  const involves = x => x.paidBy===ME || (x.split||[]).includes(ME) || x.from===ME || x.to===ME;
+  const showAll = SHOW_ALL || !ME;
+  $("#coststitle").textContent = showAll ? "All costs" : "Costs you're part of";
+  $("#toggleall").hidden = !ME; $("#toggleall").textContent = SHOW_ALL ? "Show only mine" : "Show everyone's";
+  const exps = allExpenses().filter(x=>showAll||involves(x)).sort((a,b)=>toEUR(+b.amount,b.currency)-toEUR(+a.amount,a.currency));
+  $("#costs").innerHTML = exps.length ? `<tr><th>Date</th><th>What</th><th class="r">Amount</th><th>Paid by</th><th>Split</th>${ME&&!showAll?'<th class="r">Your share</th>':""}<th></th></tr>`+exps.map(x=>{
+    const e=toEUR(+x.amount,x.currency), s=x.split||[], each=e/(s.length||1);
+    return `<tr><td class="mono" style="white-space:nowrap">${esc((x.date||"").slice(5).replace("-","/"))}</td><td>${esc(x.what)}<br><span class="pill ${esc(x.leg||"general")}">${esc(legName(x.leg||"general"))}</span></td><td class="r num" style="white-space:nowrap">${usd(e)}<br><span class="muted" style="font-size:12.5px">${eur(e)}</span></td><td>${esc(x.paidBy)}</td><td style="font-size:13.5px">${s.length===PEOPLE.length?"Everyone":esc(s.join(", "))}<br><span class="muted num" style="font-size:12.5px">${usd(each)} each</span></td>${ME&&!showAll?`<td class="r num">${s.includes(ME)?usd(each):"—"}</td>`:""}<td>${canDel(x)?`<button class="x" data-del="expenses|${esc(x._uid)}|${esc(x.id)}">Remove</button>`:""}</td></tr>`}).join("")
+    : `<tr><td><div class="empty">${allExpenses().length?"No costs involve you yet.":"No costs yet."}</div></td></tr>`;
+  const pays = allPayments().filter(y=>showAll||involves(y)).sort((a,b)=>(b.at||0)-(a.at||0));
+  $("#payments").innerHTML = pays.length ? `<tr><th>When</th><th>From</th><th>To</th><th>For</th><th>Paid with</th><th class="r">Amount</th><th></th></tr>`+pays.map(y=>`<tr><td class="mono">${y.at?new Date(y.at).toLocaleDateString(undefined,{month:"short",day:"numeric"}):""}</td><td>${esc(y.from)}</td><td>${esc(y.to)}</td><td style="font-size:13.5px">${esc(y.for||"—")}</td><td><span class="method">${esc(y.method||"Not given")}</span></td><td class="r num">${usd(toEUR(+y.amount,y.currency))}<br><span class="muted" style="font-size:12.5px">${eur(toEUR(+y.amount,y.currency))}</span></td><td>${canDel(y)?`<button class="x" data-del="payments|${esc(y._uid)}|${esc(y.id)}">Remove</button>`:""}</td></tr>`).join("")
+    : `<tr><td><div class="empty">No payments recorded yet.</div></td></tr>`;
+  const mineCost = exps.reduce((t,x)=>{const s=x.split||[];return t+(s.includes(ME)?toEUR(+x.amount,x.currency)/s.length:0)},0);
+}
+$("#toggleall").addEventListener("click",()=>{SHOW_ALL=!SHOW_ALL;renderMoney();});
+let VIEW="owe";
+function setView(v){ VIEW=v; document.querySelectorAll("#views [data-view]").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===v)); ["owe","owed","history"].forEach(k=>$("#v-"+k).hidden=k!==v); }
+$("#views").addEventListener("click",e=>{const b=e.target.closest("[data-view]"); if(b) setView(b.dataset.view);});
+$("#moneyactions").addEventListener("click",e=>{ const b=e.target.closest("[data-panel]"); if(!b) return;
+  const target=b.dataset.panel; ["add"].forEach(k=>{ const open = k===target && $("#panel-"+k).hidden; $("#panel-"+k).hidden=!open; document.querySelector(`[data-panel="${k}"]`).setAttribute("aria-expanded",open); });
+  const p=$("#panel-"+target); if(!p.hidden) setTimeout(()=>p.querySelector("input,select")?.focus(),50); });
+(function(){
+  const opts = `<option value="">Choose</option>`+PEOPLE.map(p=>`<option>${p}</option>`).join("");
+  $("#c-paid").innerHTML=opts;
+  $("#c-split").innerHTML = PEOPLE.map(p=>`<button type="button" class="pick" data-p="${p}" aria-pressed="false">${p}</button>`).join("");
+  $("#c-split").addEventListener("click",e=>{const b=e.target.closest(".pick");if(b)b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")!=="true");});
+  document.querySelector("#addform .quick").addEventListener("click",e=>{const q=e.target.dataset.q;if(!q)return;const set=q==="none"?[]:q==="all"?PEOPLE:LEGS[q].people;document.querySelectorAll("#c-split .pick").forEach(b=>b.setAttribute("aria-pressed",set.includes(b.dataset.p)));if(LEGS[q])$("#c-leg").value=q;if(q==="all")$("#c-leg").value="general";});
+  document.querySelectorAll(".seg").forEach(g=>g.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;g.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));}));
+  $("#c-what").addEventListener("input",()=>{const raw=$("#c-what").value,t=tidy(raw);$("#c-preview").innerHTML = raw.trim()&&t!==raw.trim()?`Will save as <b>${esc(t)}</b>`:"";});
+})();
+const segVal = id => document.querySelector(`#${id} button[aria-pressed="true"]`).dataset.v;
+const parseAmt = s => { const v=parseFloat(String(s).replace(/[€$\s]/g,"").replace(",",".")); return isFinite(v)&&v>0?Math.round(v*100)/100:null; };
+const errText = (err,what) => err?.message || `Couldn't ${what}. Try again in a moment.`;
+const addTo = async (kind,obj) => { await api("add",{kind,obj}); renderAll(); };
+
+$("#addform").addEventListener("submit",async e=>{
+  e.preventDefault(); const msg=$("#addmsg");
+  const what=tidy($("#c-what").value), amount=parseAmt($("#c-amt").value), paidBy=IS_OWNER?$("#c-paid").value:myClaim();
+  const split=[...document.querySelectorAll('#c-split .pick[aria-pressed="true"]')].map(b=>b.dataset.p);
+  const err=!canWrite()?"Unlock your name with your PIN first (top of the page).":!what?"Say what the cost was for.":!amount?"Enter an amount greater than zero.":!paidBy?"Choose who paid.":!split.length?"Choose at least one person to split it with.":"";
+  if(err){msg.className="formmsg err";msg.textContent=err;return;}
+  const btn=$("#c-add"); btn.disabled=true;
+  try{ const cur=segVal("c-cur"); await addTo("expenses",{what:what.slice(0,80),amount,currency:cur,paidBy,split,leg:$("#c-leg").value,date:$("#c-date").value||"",at:Date.now()});
+    msg.className="formmsg ok"; msg.textContent=`Added ${what}, ${money(amount,cur)}.`; $("#c-what").value="";$("#c-amt").value="";$("#c-preview").textContent=""; }
+  catch(err){ msg.className="formmsg err"; msg.textContent=errText(err,"add costs"); }
+  finally{ btn.disabled=false; }
+});
+async function recordPayment(p,msgEl){
+  try{ await addTo("payments",{...p}); msgEl.className="formmsg ok"; msgEl.textContent=`Recorded ${p.from} → ${p.to}, ${money(p.amount,p.currency)} by ${p.method}.`; return true; }
+  catch(err){ msgEl.className="formmsg err"; msgEl.textContent=errText(err,"record payments"); return false; }
+}
+$("#p-money").addEventListener("click",async e=>{
+  const rv=e.target.closest("[data-recv]");
+  if(rv){ const [from,key,a]=rv.dataset.recv.split("|"); const x=allExpenses().find(x=>x._uid+"/"+x.id===key);
+    const method=document.querySelector(`select[data-r="${CSS.escape(from)}"]`)?.value||"Other"; rv.disabled=true;
+    const ok=await recordPayment({from,to:ME,amount:+a,currency:"USD",method,for:x?x.what:"",item:key},$("#owedmsg"));
+    if(ok){ const m=$("#owedmsg"); m.className="formmsg ok"; m.textContent=`Marked ${x?x.what:"that cost"} as received from ${from}.`; } else rv.disabled=false; return; }
+  const pi=e.target.closest("[data-payitem]");
+  if(pi){ const [to,key,a]=pi.dataset.payitem.split("|"); const x=allExpenses().find(x=>x._uid+"/"+x.id===key);
+    const method=document.querySelector(`select[data-m="${CSS.escape(to)}"]`)?.value||"Other"; pi.disabled=true;
+    const ok=await recordPayment({from:ME,to,amount:+a,currency:"USD",method,for:x?x.what:"",item:key},$("#minemsg"));
+    const m=$("#minemsg"); if(m&&ok){m.className="formmsg ok";m.textContent=`Marked ${x?x.what:"that cost"} as paid to ${to}.`;} if(!ok) pi.disabled=false; return; }
+  const b=e.target.closest("[data-del]"); if(!b||!DBREF) return;
+  if(b.dataset.confirm!=="1"){ b.dataset.confirm="1"; b.textContent="Confirm remove"; setTimeout(()=>{ if(b.isConnected){b.dataset.confirm="";b.textContent="Remove";} },4000); return; }
+  const [kind,uid,id]=b.dataset.del.split("|");
+  try{ await api("delete",{kind,id}); renderAll(); }catch(err){ b.textContent=err.message; }
+});
+
+/* ================= Photos ================= */
+function renderPhotos(){
+  $("#p-photos").innerHTML = PHOTO_ALBUM
+    ? `<div class="card album"><h3>Trip photo album</h3><p class="muted" style="margin:0">Add your photos and videos from the wedding and the trip. Everyone can view and download from the shared album.</p><a class="btn" href="${esc(PHOTO_ALBUM)}" target="_blank" rel="noopener">Open the shared album ↗</a></div>`
+    : `<div class="card album"><h3>Trip photo album</h3><p class="muted" style="margin:0">A shared album for everyone's wedding and trip photos is coming soon. The link will show up here.</p></div>`;
+}
+
+/* ================= Info & contacts ================= */
+let EDIT_CONTACT=null;
+const CFIELDS=[["phone","Phone / WhatsApp","+1 312 555 0100"],["venmo","Venmo","@username"],["zelle","Zelle","Phone or email"],["paypal","PayPal","Email or @handle"],["cashapp","Cash App","$cashtag"]];
+function renderPeople(){
+  $("#people").innerHTML = PEOPLE.map(p=>{
+    const c=contactOf(p), mine=p===ME, has=CFIELDS.some(([k])=>c[k]), canEdit=canActAs(p);
+    if(EDIT_CONTACT===p && canEdit) return `<div class="person me"><div class="top"><span class="nm">${p}</span></div><form data-cform="${p}">${CFIELDS.map(([k,l,ph])=>`<label class="${k==="phone"?"full":""}">${l}<input id="cf-${p}-${k}" value="${esc(c[k]||"")}" placeholder="${ph}" maxlength="60" autocomplete="off"></label>`).join("")}<div class="row"><button class="btn sm" type="submit">Save</button><button class="linkbtn" type="button" data-cancel>Cancel</button></div></form></div>`;
+    const rows=CFIELDS.filter(([k])=>c[k]).map(([k,l])=>`<dt>${l}</dt><dd><span class="mono">${esc(c[k])}</span><button class="copy" data-copy="${esc(c[k])}">Copy</button></dd>`).join("");
+    const linked = claimOf(p);
+    return `<div class="person${mine?" me":""}"><div class="top"><span class="nm">${p}${mine?' <span class="chip me">you</span>':""}</span><span style="display:flex;gap:10px">${canEdit?`<button class="linkbtn" data-cedit="${p}">${has?"Edit":"Add yours"}</button>`:""}${IS_OWNER&&linked&&p!==AUTH?.person?`<button class="linkbtn" data-unlink="${esc(p)}">Reset PIN</button>`:""}</span></div>${has?`<dl class="kv">${rows}</dl>`:`<div class="none">${mine&&canEdit?"Add your number and payment apps so people can reach and pay you.":"Nothing added yet."}</div>`}</div>`;
+  }).join("");
+}
+$("#people").addEventListener("click",async e=>{
+  const ed=e.target.closest("[data-cedit]"); if(ed){EDIT_CONTACT=ed.dataset.cedit;renderPeople();return;}
+  if(e.target.closest("[data-cancel]")){EDIT_CONTACT=null;renderPeople();return;}
+  const un=e.target.closest("[data-unlink]"); if(un && IS_OWNER){
+    if(un.dataset.confirm!=="1"){un.dataset.confirm="1";un.textContent="Confirm unlink";return;}
+    try{ await api("resetPin",{target:un.dataset.unlink}); $("#peoplemsg").className="formmsg ok"; $("#peoplemsg").textContent=`PIN reset. ${un.dataset.unlink} can set a new one.`; renderPeople(); }catch(err){ $("#peoplemsg").className="formmsg err"; $("#peoplemsg").textContent=err.message; }
+  }
+});
+$("#people").addEventListener("submit",async e=>{
+  const f=e.target.closest("[data-cform]"); if(!f) return; e.preventDefault();
+  const p=f.dataset.cform, data={}, msg=$("#peoplemsg"); CFIELDS.forEach(([k])=>data[k]=$(`#cf-${p}-${k}`).value.trim().slice(0,60));
+  if(!canActAs(p)){ msg.className="formmsg err"; msg.textContent=`Only ${p} can edit ${p}'s details.`; return; }
+  try{ await writePerson(p,"contact",data); EDIT_CONTACT=null; msg.className="formmsg ok"; msg.textContent=`Saved ${p}'s details.`; renderPeople(); }
+  catch(err){ msg.className="formmsg err"; msg.textContent=errText(err,"save contact details"); }
+});
+function renderInfo(){ $("#info").innerHTML = INFO.map(c=>`<div class="card"><h3>${c.h}</h3>${c.p.map(x=>`<p>${x}</p>`).join("")}</div>`).join(""); }
+document.addEventListener("click",e=>{const b=e.target.closest("[data-copy]");if(!b)return;const done=()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1500)};try{navigator.clipboard.writeText(b.dataset.copy).then(done,()=>{})}catch(err){}});
+
+function renderAll(){ renderWho(); renderStrip(); renderSchedule(); renderTravel(); renderMoney(); renderPeople(); }
+renderAll(); renderInfo(); renderPhotos();
+
+/* ================= Live data ================= */
+if(IS_OWNER && !ME) ME = AUTH.person;
+load();
+setInterval(()=>{ if(document.visibilityState==="visible") load(); }, 20000);
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") load(); });
+</script>
+
+</body>
+</html>
