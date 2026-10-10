@@ -168,6 +168,9 @@ form.add input,form.add select{background:var(--bg);border:1px solid var(--line)
 .formmsg{font-size:13.5px}
 .formmsg.err{color:var(--bad)} .formmsg.ok{color:var(--good)}
 .x{background:none;border:0;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 4px}
+dialog#editdlg{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--fg);width:min(600px,94vw);max-height:92vh;overflow:auto;padding:18px}
+dialog#editdlg::backdrop{background:rgba(0,0,0,.45)}
+#editform .note{font-size:13px;color:var(--muted)}
 .x:hover{color:var(--bad)}
 .empty{padding:18px;text-align:center;color:var(--muted);font-size:14px;border:1px dashed var(--line);border-radius:8px}
 .pill{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:99px}
@@ -312,7 +315,7 @@ details.group .gleg{margin-top:18px}
         <div class="f span2"><label class="label" for="c-leg">City</label><select id="c-leg"><option value="general">Whole trip</option><option value="madrid">Madrid</option><option value="sansebastian">San Sebastián</option><option value="barcelona">Barcelona</option></select></div>
         <div class="f span2"><label class="label" for="c-date">Date</label><input id="c-date" type="date" min="2026-08-01" max="2026-10-31" value="2026-10-01"></div>
         <div class="f span6"><span class="label">Split evenly between</span><div class="picks" id="c-split"></div>
-          <div class="quick"><button type="button" data-q="all">Everyone</button><button type="button" data-q="madrid">Madrid group</button><button type="button" data-q="sansebastian">San Sebastián group</button><button type="button" data-q="barcelona">Barcelona group</button><button type="button" data-q="none">Clear</button></div></div>
+          <div class="quick"><button type="button" data-q="all">Everyone but Carly</button><button type="button" data-q="madrid">Madrid group</button><button type="button" data-q="sansebastian">San Sebastián group</button><button type="button" data-q="barcelona">Barcelona group</button><button type="button" data-q="none">Clear</button></div></div>
         <div class="f span6" style="flex-direction:row;align-items:center;gap:12px;flex-wrap:wrap"><button class="btn" id="c-add" type="submit">Add cost</button><span class="formmsg" id="addmsg"></span></div>
       </form>
       <p class="muted" style="font-size:13px;margin:12px 0 0">Still to add once paid: Vueling bag fees ($12–192 per bag), International Driving Permits for Oliver and Lake, Segovia bus for Meredith (about €15).</p>
@@ -368,12 +371,15 @@ details.group .gleg{margin-top:18px}
   </section>
 </div>
 
+<dialog id="editdlg"><form class="add" id="editform" novalidate></form></dialog>
+
 <script>
 /* ================= Locked trip data (changed only by republishing) ================= */
 const RATE = 1.134;               // $ per €1, fixed. Set Sep 29, 2026.
 const ADMIN_NAME = "Oliver";
 const PHOTO_ALBUM = "";           // shared album link goes here
-const PEOPLE = ["Oliver","Meredith","Mia","Chib","Lake","Lam","Joe","Danny"];
+const PEOPLE = ["Oliver","Meredith","Mia","Chib","Lake","Lam","Joe","Danny","Carly"];
+const CORE = PEOPLE.filter(p=>p!=="Carly");   // Carly was on the Madrid leg only; "Everyone" in the cost form means these people
 const METHODS = ["Venmo","Zelle","PayPal","Cash App","Cash","Bank transfer","Other"];
 const LEGS = {
   madrid:{city:"Madrid",dates:"Oct 1 – 4",nights:3,people:PEOPLE.slice()},
@@ -786,10 +792,10 @@ function renderMoney(){
   const exps = allExpenses().filter(x=>showAll||involves(x)).sort((a,b)=>toEUR(+b.amount,b.currency)-toEUR(+a.amount,a.currency));
   $("#costs").innerHTML = exps.length ? `<tr><th>Date</th><th>What</th><th class="r">Amount</th><th>Paid by</th><th>Split</th>${ME&&!showAll?'<th class="r">Your share</th>':""}<th></th></tr>`+exps.map(x=>{
     const e=toEUR(+x.amount,x.currency), s=x.split||[], each=e/(s.length||1);
-    return `<tr><td class="mono" style="white-space:nowrap">${esc((x.date||"").slice(5).replace("-","/"))}</td><td>${esc(x.what)}<br><span class="pill ${esc(x.leg||"general")}">${esc(legName(x.leg||"general"))}</span></td><td class="r num" style="white-space:nowrap">${usd(e)}<br><span class="muted" style="font-size:12.5px">${eur(e)}</span></td><td>${esc(x.paidBy)}</td><td style="font-size:13.5px">${s.length===PEOPLE.length?"Everyone":esc(s.join(", "))}<br><span class="muted num" style="font-size:12.5px">${usd(each)} each</span></td>${ME&&!showAll?`<td class="r num">${s.includes(ME)?usd(each):"—"}</td>`:""}<td>${canDel(x)?`<button class="x" data-del="expenses|${esc(x._uid)}|${esc(x.id)}">Remove</button>`:""}</td></tr>`}).join("")
+    return `<tr><td class="mono" style="white-space:nowrap">${esc((x.date||"").slice(5).replace("-","/"))}</td><td>${esc(x.what)}<br><span class="pill ${esc(x.leg||"general")}">${esc(legName(x.leg||"general"))}</span></td><td class="r num" style="white-space:nowrap">${usd(e)}<br><span class="muted" style="font-size:12.5px">${eur(e)}</span></td><td>${esc(x.paidBy)}</td><td style="font-size:13.5px">${esc(splitLabel(s))}<br><span class="muted num" style="font-size:12.5px">${usd(each)} each</span></td>${ME&&!showAll?`<td class="r num">${s.includes(ME)?usd(each):"—"}</td>`:""}<td style="white-space:nowrap">${IS_OWNER?`<button class="x" data-editrow="expenses|${esc(x.id)}">Edit</button>`:""}${canDel(x)?`<button class="x" data-del="expenses|${esc(x._uid)}|${esc(x.id)}">Remove</button>`:""}</td></tr>`}).join("")
     : `<tr><td><div class="empty">${allExpenses().length?"No costs involve you yet.":"No costs yet."}</div></td></tr>`;
   const pays = allPayments().filter(y=>showAll||involves(y)).sort((a,b)=>(b.at||0)-(a.at||0));
-  $("#payments").innerHTML = pays.length ? `<tr><th>When</th><th>From</th><th>To</th><th>For</th><th>Paid with</th><th class="r">Amount</th><th></th></tr>`+pays.map(y=>`<tr><td class="mono">${y.at?new Date(y.at).toLocaleDateString(undefined,{month:"short",day:"numeric"}):""}</td><td>${esc(y.from)}</td><td>${esc(y.to)}</td><td style="font-size:13.5px">${esc(y.for||"—")}</td><td><span class="method">${esc(y.method||"Not given")}</span></td><td class="r num">${usd(toEUR(+y.amount,y.currency))}<br><span class="muted" style="font-size:12.5px">${eur(toEUR(+y.amount,y.currency))}</span></td><td>${canDel(y)?`<button class="x" data-del="payments|${esc(y._uid)}|${esc(y.id)}">Remove</button>`:""}</td></tr>`).join("")
+  $("#payments").innerHTML = pays.length ? `<tr><th>When</th><th>From</th><th>To</th><th>For</th><th>Paid with</th><th class="r">Amount</th><th></th></tr>`+pays.map(y=>`<tr><td class="mono">${y.at?new Date(y.at).toLocaleDateString(undefined,{month:"short",day:"numeric"}):""}</td><td>${esc(y.from)}</td><td>${esc(y.to)}</td><td style="font-size:13.5px">${esc(y.for||"—")}</td><td><span class="method">${esc(y.method||"Not given")}</span></td><td class="r num">${usd(toEUR(+y.amount,y.currency))}<br><span class="muted" style="font-size:12.5px">${eur(toEUR(+y.amount,y.currency))}</span></td><td style="white-space:nowrap">${IS_OWNER?`<button class="x" data-editrow="payments|${esc(y.id)}">Edit</button>`:""}${canDel(y)?`<button class="x" data-del="payments|${esc(y._uid)}|${esc(y.id)}">Remove</button>`:""}</td></tr>`).join("")
     : `<tr><td><div class="empty">No payments recorded yet.</div></td></tr>`;
   const mineCost = exps.reduce((t,x)=>{const s=x.split||[];return t+(s.includes(ME)?toEUR(+x.amount,x.currency)/s.length:0)},0);
 }
@@ -805,10 +811,13 @@ $("#moneyactions").addEventListener("click",e=>{ const b=e.target.closest("[data
   $("#c-paid").innerHTML=opts;
   $("#c-split").innerHTML = PEOPLE.map(p=>`<button type="button" class="pick" data-p="${p}" aria-pressed="false">${p}</button>`).join("");
   $("#c-split").addEventListener("click",e=>{const b=e.target.closest(".pick");if(b)b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")!=="true");});
-  document.querySelector("#addform .quick").addEventListener("click",e=>{const q=e.target.dataset.q;if(!q)return;const set=q==="none"?[]:q==="all"?PEOPLE:LEGS[q].people;document.querySelectorAll("#c-split .pick").forEach(b=>b.setAttribute("aria-pressed",set.includes(b.dataset.p)));if(LEGS[q])$("#c-leg").value=q;if(q==="all")$("#c-leg").value="general";});
+  document.querySelector("#addform .quick").addEventListener("click",e=>{const q=e.target.dataset.q;if(!q)return;const set=quickSet(q);document.querySelectorAll("#c-split .pick").forEach(b=>b.setAttribute("aria-pressed",set.includes(b.dataset.p)));if(LEGS[q])$("#c-leg").value=q;if(q==="all")$("#c-leg").value="general";});
   document.querySelectorAll(".seg").forEach(g=>g.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;g.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));}));
   $("#c-what").addEventListener("input",()=>{const raw=$("#c-what").value,t=tidy(raw);$("#c-preview").innerHTML = raw.trim()&&t!==raw.trim()?`Will save as <b>${esc(t)}</b>`:"";});
 })();
+const quickSet = q => q==="none"?[]:q==="all"?CORE:LEGS[q].people;
+const sameSet = (a,b) => a.length===b.length && a.every(x=>b.includes(x));
+const splitLabel = s => sameSet(s,PEOPLE)?"Everyone":sameSet(s,CORE)?"Everyone except Carly":s.join(", ");
 const segVal = id => document.querySelector(`#${id} button[aria-pressed="true"]`).dataset.v;
 const parseAmt = s => { const v=parseFloat(String(s).replace(/[€$\s]/g,"").replace(",",".")); return isFinite(v)&&v>0?Math.round(v*100)/100:null; };
 const errText = (err,what) => err?.message || `Couldn't ${what}. Try again in a moment.`;
@@ -938,6 +947,75 @@ if(IS_OWNER && !ME) ME = AUTH.person;
 load();
 setInterval(()=>{ if(document.visibilityState==="visible") load(); }, 20000);
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") load(); });
+
+/* ================= Admin editing (Oliver only) =================
+   Edit any cost or payment in place. The Apps Script `update` action enforces admin on the server too. */
+const editdlg=$("#editdlg"), editform=$("#editform");
+let EDIT=null;
+const optHTML = (arr,sel) => arr.map(v=>`<option${v===sel?" selected":""}>${esc(v)}</option>`).join("");
+const localDate = ms => { if(!ms) return ""; const d=new Date(ms); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+const curSeg = (id,cur) => `<div class="seg" id="${id}"><button type="button" data-v="EUR" aria-pressed="${cur!=="USD"}">€</button><button type="button" data-v="USD" aria-pressed="${cur==="USD"}">$</button></div>`;
+function openEdit(kind,id){
+  if(!IS_OWNER) return;
+  const x=(kind==="expenses"?allExpenses():allPayments()).find(r=>r.id===id); if(!x) return;
+  EDIT={kind,id,date0:kind==="payments"?localDate(x.at):""};
+  const foot=`<div class="f span6" style="flex-direction:row;align-items:center;gap:12px;flex-wrap:wrap"><button class="btn" id="e-save" type="submit">Save changes</button><button class="btn ghost" type="button" data-close>Cancel</button><span class="formmsg" id="editmsg"></span></div>`;
+  if(kind==="expenses"){
+    const split=x.split||[];
+    editform.innerHTML=`<h3 style="grid-column:1/-1;font-size:18px;margin:0">Edit cost</h3>
+      <div class="f span6"><label class="label" for="e-what">What was it for</label><input id="e-what" maxlength="80" value="${esc(x.what)}"></div>
+      <div class="f span2"><label class="label" for="e-amt">Amount</label><input id="e-amt" inputmode="decimal" value="${esc(String(x.amount))}"></div>
+      <div class="f span2"><span class="label">Currency</span>${curSeg("e-cur",x.currency)}</div>
+      <div class="f span2"><label class="label" for="e-paid">Paid by</label><select id="e-paid">${optHTML(PEOPLE,x.paidBy)}</select></div>
+      <div class="f span3"><label class="label" for="e-leg">City</label><select id="e-leg">${["general","madrid","sansebastian","barcelona"].map(k=>`<option value="${k}"${k===(x.leg||"general")?" selected":""}>${k==="general"?"Whole trip":LEGS[k].city}</option>`).join("")}</select></div>
+      <div class="f span3"><label class="label" for="e-date">Date</label><input id="e-date" type="date" value="${esc(x.date||"")}"></div>
+      <div class="f span6"><span class="label">Split evenly between</span><div class="picks" id="e-split">${PEOPLE.map(p=>`<button type="button" class="pick" data-p="${p}" aria-pressed="${split.includes(p)}">${p}</button>`).join("")}</div>
+        <div class="quick"><button type="button" data-q="all">Everyone but Carly</button><button type="button" data-q="madrid">Madrid group</button><button type="button" data-q="sansebastian">San Sebastián group</button><button type="button" data-q="barcelona">Barcelona group</button><button type="button" data-q="none">Clear</button></div></div>
+      <p class="note span6" style="grid-column:1/-1;margin:0">Payments already recorded against this cost are not changed. Edit those separately if the amount moved.</p>${foot}`;
+  } else {
+    const items=allExpenses().sort((a,b)=>String(a.what).localeCompare(String(b.what)));
+    editform.innerHTML=`<h3 style="grid-column:1/-1;font-size:18px;margin:0">Edit payment</h3>
+      <div class="f span3"><label class="label" for="e-from">From</label><select id="e-from">${optHTML(PEOPLE,x.from)}</select></div>
+      <div class="f span3"><label class="label" for="e-to">To</label><select id="e-to">${optHTML(PEOPLE,x.to)}</select></div>
+      <div class="f span2"><label class="label" for="e-amt">Amount</label><input id="e-amt" inputmode="decimal" value="${esc(String(x.amount))}"></div>
+      <div class="f span2"><span class="label">Currency</span>${curSeg("e-cur",x.currency)}</div>
+      <div class="f span2"><label class="label" for="e-method">Paid with</label><select id="e-method">${optHTML(METHODS,x.method)}</select></div>
+      <div class="f span3"><label class="label" for="e-for">For</label><input id="e-for" maxlength="120" value="${esc(x.for||"")}"></div>
+      <div class="f span3"><label class="label" for="e-date">Date</label><input id="e-date" type="date" value="${esc(EDIT.date0)}"></div>
+      <div class="f span6"><label class="label" for="e-item">Tied to cost</label><select id="e-item"><option value="">Not tied to a cost</option>${items.map(c=>{const k=c._uid+"/"+c.id;return `<option value="${esc(k)}"${k===x.item?" selected":""}>${esc(c.what)}</option>`}).join("")}</select></div>${foot}`;
+  }
+  editdlg.showModal();
+}
+$("#p-money").addEventListener("click",e=>{ const b=e.target.closest("[data-editrow]"); if(!b) return; const [kind,id]=b.dataset.editrow.split("|"); openEdit(kind,id); });
+editform.addEventListener("click",e=>{
+  if(e.target.closest("[data-close]")){ editdlg.close(); return; }
+  const seg=e.target.closest(".seg button"); if(seg){ seg.parentElement.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===seg)); return; }
+  const pk=e.target.closest("#e-split .pick"); if(pk){ pk.setAttribute("aria-pressed",pk.getAttribute("aria-pressed")!=="true"); return; }
+  const q=e.target.closest(".quick button")?.dataset.q; if(q){ const set=quickSet(q); editform.querySelectorAll("#e-split .pick").forEach(b=>b.setAttribute("aria-pressed",set.includes(b.dataset.p))); if(LEGS[q]) $("#e-leg").value=q; if(q==="all") $("#e-leg").value="general"; }
+});
+editform.addEventListener("submit",async e=>{
+  e.preventDefault(); if(!EDIT||!IS_OWNER) return;
+  const msg=$("#editmsg"), btn=$("#e-save"), amount=parseAmt($("#e-amt").value), cur=segVal("e-cur");
+  const fail=t=>{ msg.className="formmsg err"; msg.textContent=t; };
+  if(!amount) return fail("Enter an amount greater than zero.");
+  let obj;
+  if(EDIT.kind==="expenses"){
+    const what=tidy($("#e-what").value), split=[...editform.querySelectorAll('#e-split .pick[aria-pressed="true"]')].map(b=>b.dataset.p);
+    if(!what) return fail("Say what the cost was for.");
+    if(!split.length) return fail("Choose at least one person to split it with.");
+    obj={what:what.slice(0,80),amount,currency:cur,paidBy:$("#e-paid").value,split,leg:$("#e-leg").value,date:$("#e-date").value||""};
+  } else {
+    const from=$("#e-from").value, to=$("#e-to").value;
+    if(from===to) return fail("From and To need to be different people.");
+    const d=$("#e-date").value;
+    obj={from,to,amount,currency:cur,method:$("#e-method").value,for:$("#e-for").value.trim().slice(0,120),item:$("#e-item").value};
+    if(d && d!==EDIT.date0) obj.date=d;
+  }
+  btn.disabled=true;
+  try{ await api("update",{kind:EDIT.kind,id:EDIT.id,obj}); editdlg.close(); EDIT=null; renderAll(); }
+  catch(err){ fail(errText(err,"save that edit")); }
+  finally{ btn.disabled=false; }
+});
 </script>
 
 </body>

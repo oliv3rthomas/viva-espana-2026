@@ -7,7 +7,7 @@
  */
 
 const ADMIN_PERSON = "Oliver";   // this person's PIN can act for everyone
-const PEOPLE = ["Oliver","Meredith","Mia","Chib","Lake","Lam","Joe","Danny"];
+const PEOPLE = ["Oliver","Meredith","Mia","Chib","Lake","Lam","Joe","Danny","Carly"];   // Carly joined for the Madrid leg only
 const METHODS = ["Venmo","Zelle","PayPal","Cash App","Cash","Bank transfer","Other"];
 const LEGS = ["general","madrid","sansebastian","barcelona"];
 
@@ -52,6 +52,7 @@ function handle_(req) {
     case "savePerson": return savePerson_(auth_(req), req);
     case "add": return add_(auth_(req), req);
     case "delete": return del_(auth_(req), req);
+    case "update": return update_(auth_(req), req);
     case "resetPin": return resetPin_(auth_(req), req);
     default: throw new Error("Unknown action.");
   }
@@ -137,6 +138,33 @@ function del_(a, req) {
   if (i < 0) return {};
   if (!a.admin && rows[i].by !== a.person) throw new Error("Only the person who added this, or Oliver, can remove it.");
   sheet_(name).deleteRow(i + 2);
+  return {};
+}
+
+/* Admin only: rewrite a cost or payment in place. The id, who added it (by) and the original timestamp (at, except a payment's date) are kept,
+   so payments tied to a cost (item) stay tied after the cost is edited. */
+function update_(a, req) {
+  if (!a.admin) throw new Error("Only " + ADMIN_PERSON + " can edit costs and payments.");
+  const name = req.kind === "payments" ? "payments" : req.kind === "expenses" ? "expenses" : "";
+  if (!name) throw new Error("Unknown list.");
+  const rows = rows_(name), i = rows.findIndex(r => r.id === req.id);
+  if (i < 0) throw new Error("That item no longer exists. Refresh and try again.");
+  const o = req.obj || {}, old = rows[i];
+  let next;
+  if (name === "expenses") {
+    const split = (o.split || []).filter(p => PEOPLE.indexOf(p) >= 0);
+    if (!split.length) throw new Error("Choose at least one person to split it with.");
+    next = Object.assign({}, old, { what: clean_(o.what, 80) || "Cost", amount: money_(o.amount), currency: cur_(o.currency),
+      paidBy: checkPerson_(o.paidBy), split: split.join(", "), leg: LEGS.indexOf(o.leg) >= 0 ? o.leg : "general", date: clean_(o.date, 10) });
+  } else {
+    const from = checkPerson_(o.from), to = checkPerson_(o.to);
+    if (from === to) throw new Error("From and To need to be different people.");
+    let at = Number(old.at) || Date.now();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(o.date || ""))) at = Date.parse(o.date + "T12:00:00Z");
+    next = Object.assign({}, old, { from: from, to: to, amount: money_(o.amount), currency: cur_(o.currency),
+      method: METHODS.indexOf(o.method) >= 0 ? o.method : "Other", "for": clean_(o["for"], 120), item: clean_(o.item, 80), at: at });
+  }
+  sheet_(name).getRange(i + 2, 1, 1, SHEETS[name].length).setValues([SHEETS[name].map(h => next[h] === undefined ? "" : next[h])]);
   return {};
 }
 
